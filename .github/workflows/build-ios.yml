@@ -10,6 +10,7 @@ on:
 jobs:
   build-ios:
     runs-on: macos-latest
+    timeout-minutes: 60
     
     steps:
     - name: Checkout repository
@@ -37,11 +38,12 @@ jobs:
     - name: Upload iOS Build Artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: ios-build
+        name: ios-build-${{ github.run_number }}
         path: |
-          build/ios/iphoneos/*.app
-          build/ios/iphoneos/*.ipa
+          build/ios/iphonesimulator/
+          build/ios/iphoneos/
         retention-days: 30
+        if-no-files-found: warn
         
     - name: Build iOS App with Code Signing (Optional)
       if: github.event_name == 'workflow_dispatch'
