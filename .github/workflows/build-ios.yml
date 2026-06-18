@@ -1,0 +1,94 @@
+name: Build iOS App
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+jobs:
+  build-ios:
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.44.2'
+        channel: 'stable'
+        cache: true
+        
+    - name: Install Flutter dependencies
+      run: flutter pub get
+      
+    - name: Verify Flutter installation
+      run: flutter doctor -v
+      
+    - name: Analyze code
+      run: flutter analyze
+      
+    - name: Build iOS App (No Code Signing)
+      run: flutter build ios --release --no-codesign
+      
+    - name: Upload iOS Build Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ios-build
+        path: |
+          build/ios/iphoneos/*.app
+          build/ios/iphoneos/*.ipa
+        retention-days: 30
+        
+    - name: Build iOS App with Code Signing (Optional)
+      if: github.event_name == 'workflow_dispatch'
+      run: |
+        # This step requires GitHub Secrets to be configured:
+        # - IOS_CERTIFICATE_BASE64
+        # - IOS_CERTIFICATE_PASSWORD
+        # - IOS_PROVISIONING_PROFILE_BASE64
+        # - KEYCHAIN_PASSWORD
+        
+        # Create temporary keychain
+        KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+        KEYCHAIN_PASSWORD=$(openssl rand -base64 32)
+        
+        security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+        security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+        security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+        
+        # Import certificate
+        CERTIFICATE_PATH=$RUNNER_TEMP/certificate.p12
+        echo -n "$IOS_CERTIFICATE_BASE64" | base64 --decode -o $CERTIFICATE_PATH
+        security import $CERTIFICATE_PATH -P "$IOS_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+        security list-keychain -d user -s $KEYCHAIN_PATH
+        
+        # Import provisioning profile
+        PROVISIONING_PROFILE_PATH=$RUNNER_TEMP/profile.mobileprovision
+        echo -n "$IOS_PROVISIONING_PROFILE_BASE64" | base64 --decode -o $PROVISIONING_PROFILE_PATH
+        mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+        cp $PROVISIONING_PROFILE_PATH ~/Library/MobileDevice/Provisioning\ Profiles/
+        
+        # Build with code signing
+        flutter build ios --release
+        
+        # Export IPA
+        xcodebuild -exportArchive -archivePath build/ios/Runner.xcarchive \
+          -exportOptionsPlist ios/ExportOptions.plist \
+          -exportPath build/ios/ipa
+      env:
+        IOS_CERTIFICATE_BASE64: ${{ secrets.IOS_CERTIFICATE_BASE64 }}
+        IOS_CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
+        IOS_PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
+        KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        
+    - name: Upload Signed IPA (Optional)
+      if: github.event_name == 'workflow_dispatch'
+      uses: actions/upload-artifact@v4
+      with:
+        name: ios-signed-ipa
+        path: build/ios/ipa/*.ipa
+        retention-days: 30

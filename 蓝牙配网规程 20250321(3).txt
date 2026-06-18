@@ -1,0 +1,307 @@
+
+
+--- page 1 ---
+采集器蓝牙配网规程（v2.9）
+1. 蓝牙信息
+1.1 采集器的蓝牙相关 UUID 如下：
+服务(Service)通道的 UUID 默认值为：0000FEE700001000800000805F9B34FB
+indication 接收(Indicate)通道 UUID 默认值为：0000FED600001000800000805F9B34FB
+indication 发送(Write)通道 UUID 默认值为：0000FED500001000800000805F9B34FB
+1.2 采集器的蓝牙名称：前缀+连接状态+base64(DTUID 转成 10 个字
+节 HEX 格式)。
+前缀：出厂默认前缀为 SSL_，Cli 指令可修改，1~8 字符。
+连接状态：
+0：WIFI 未连接
+1：WIFI 已连接
+2：Rerserved，暂时未用到
+3：已连接上 MQTT 服务器
+1.3 MTU：按 240 协商（要做兼容性测试）。
+1.4 蓝牙层数据格式
+分包数据发送格式为: [seqNo][seqNum][dataLen][data]
+[seqNo]----------发包序列号，从 01 开始编号
+[seqNum]--------总分包数
+[dataLen]--------本次发送数据长度
+[data]-------------本次发送的数据
+
+
+--- page 2 ---
+2. 设备配置（配网）
+2.1 数据编解码
+编解码方式：
+收发数据 = Base64( AES( JSON( 配置数据 ) ) )
+- Base64 编解码
+- AES 编解码（AES key=md5(DTU ID + prefix)） //prefix 为固定的
+"SEC_"，DTU ID 为 20 为纯数字，采集器唯一标识
+- 配置数据采用 JSON 格式
+2.2 JSON 数据
+设备应答中，当"RC"的值为 9000 时,表示需要进行蓝牙密码认证。
+下述“用户请求”表示手机端下发给采集器的命令，“设备应该”
+表示采集器回复手机端的数据。
+目前支持以下 JSON 命令：
+-GET_SCAN_REQ (30003) ： 获 取 扫 描 AP 列 表 ， 应 答 为
+-GET_SCAN_RESP (30004)
+数据定义如下：
+用户请求：{"CID":30003}
+设备应答：{"CID":30004,
+"RC":0, //0 为命令执行成功
+
+
+--- page 3 ---
+"PL":[{
+"SSID":"xxxxxxxx",
+"Secu":1 //0, 未加密，1，加密
+},{},……]
+}
+-SET_CONFIG_REQ(30005) ： 配 置 设 备 参 数 ， 应 答 为
+SET_CONFIG_RESP (30006)
+数据定义如下：
+配 网 时 进 需 要 包 含 "SSID" 和
+"Key"两个字段。
+用户请求：{"CID":30005,
+"PL":{
+"SSID":"xxxxxxxx",
+"Key":"xxxxxxxx",
+"DHCP":1, //0,使用静态地址 1,使用 DHCP
+"IP":"xx.xx.xx.xx", //静态地址
+"Subnet":"xx.xx.xx.xx", //静态地址子网掩码
+"GW":"xx.xx.xx.xx",//网关地址
+"DNS":"xx.xx.xx.xx",//DNS 地址
+"ApKey":"xxxxxxxx",//蓝牙密码
+"HPort":xxxx,//HTTP 端口
+
+
+--- page 4 ---
+"HUser":"xxxxxxxx",//HTTP 用户名
+"HPwd":"xxxxxxxx",//HTTP 密码
+"UART":"115200,8,N,1", //串口配置，波特率/
+数据位+校验+停止位
+"BleKeyEn":1, //开启/关闭设备蓝牙密码功能，
+1 为开启，0 为关闭
+}
+}
+设备应答：{"CID":30006,
+"RC":0, //0 为命令执行成功
+}
+-RESTART_REQ(30007)：重启设备命令，应答为 RESTART_RESP
+(30008)
+数据定义如下：
+用户请求：{"CID":30007}
+设备应答：{"CID":30008,
+"RC":0, //0 为命令执行成功
+}
+-GET_VER_REQ(30001) ： 获 取 设 备 版 本 信 息 ， 应 答 为
+GET_VER_RESP (30002)
+
+
+--- page 5 ---
+数据定义如下：
+用户请求：{"CID":30001}
+设备应答：{"CID":30002,
+"RC":0, //0 为命令执行成功
+"PL":{
+"SV":" xxxxx", //软件版本
+"HV":" xxxxx", //硬件型号
+}
+}
+-GET_WIFI_CONFIG_REQ(30009)：获取设备 WIFI 配置参数，应
+答为 GET_WIFI_CONFIG_RESP (30010)
+数据定义如下：
+用户请求：{"CID":30009}
+设备应答：{"CID":30010,
+"RC":0, //0 为命令执行成功
+"PL":{
+"SSID":"xxxxxxxx",
+"Key":"xxxxxxxx",
+}
+}
+-GET_NET_CONFIG_REQ(30011)：获取设备网络配置参数，应答
+
+
+--- page 6 ---
+为 GET_NET_CONFIG_RESP (30012)
+数据定义如下：
+用户请求：{"CID":30011}
+设备应答：{"CID":30012,
+"RC":0, //0 为命令执行成功
+"PL":{
+"DHCP":1, //0,使用静态地址 1,使用 DHCP
+"IP":"xx.xx.xx.xx", //IP 地址
+"Subnet":"xx.xx.xx.xx", //子网掩码
+"GW":"xx.xx.xx.xx",//网关地址
+"DNS":"xx.xx.xx.xx",//DNS 地址
+}
+}
+-GET_DIAG_CONFIG_REQ(30013)：获取设备诊断参数，应答为
+GET_DIAG_CONFIG_RESP (30014)
+数据定义如下：
+用户请求：{"CID":30013}
+设备应答：{"CID":30014,
+"RC":0, //0 为命令执行成功
+"PL":{
+"ApKey":"xxxxxxxx",//蓝牙密码
+"HPort":xxxx,//HTTP 端口
+
+
+--- page 7 ---
+"HUser":"xxxxxxxx",//HTTP 用户名
+"HPwd":"xxxxxxxx",//HTTP 密码
+"Ping":"xxxxxx", //用于诊断通讯 Ping 地址
+}
+}
+-GET_UART_CONFIG_REQ(30015)：获取设备串口参数，应答为
+GET_UART_CONFIG_RESP (30016)
+数据定义如下：
+用户请求：{"CID":30015}
+设备应答：{"CID":30016,
+"RC":0, //0 为命令执行成功
+"PL":{
+"UART":"115200,8,n,1", //串口配置，波特率/
+数据位+校验+停止位
+}
+}
+-GET_BLE_KEY_ENABLE_CONFIG_REQ(30017)：获取设备蓝牙密
+码 功 能 是 否 已 开 启 的 配 置 参 数 ， 应 答 为
+GET_BLE_KEY_ENABLE_CONFIG_RESP (30018)
+数据定义如下：
+用户请求：{"CID":30017}
+设备应答：{"CID":30018,
+
+
+--- page 8 ---
+"RC":0, //0 为命令执行成功
+"PL":{
+"BleKeyEn":1, //BLE 密码功能开启状态，1 为
+已开启，0 为未开启
+}
+}
+-CONFIRM_BLE_KEY_REQ(30050) ： 确 认 蓝 牙 密 码 ， 应 答 为
+CONFIRM_BLE_KEY_RESP (30051)
+数据定义如下：
+用户请求：{"CID":30050,
+"PL":{
+"BleKey":"xxxxxxxx", //BLE 密码
+}
+}
+设备应答：{"CID":30051,
+"RC":0, //0 为蓝牙密码验证成功，9001 为蓝牙
+密码验证失败
+}
+
+
+--- page 9 ---
+2.3 配置流程
+流程如下图所示：
+用户 APP 设备/模块
+扫描并连接设备/模块蓝牙
+GET_VER_REQ
+GET_VER_RESP
+版本检查
+GET_SCAN_REQ
+GET_SCAN_RESP
+AP 扫描
+SET_CONFIG_REQ
+SET_CONFIG_RESP
+保存配置
+查询配网结果
+反馈配网结果
+设备联网
+用户选择、输入
+
+
+--- page 10 ---
+配置流程结束后，用户可以通过诊断流程，获取当前 WIFI 连接状态，
+从而判断配置是否成功。
+3. 设备诊断
+3.1 诊断方式
+蓝牙
+3.2 数据编解码
+诊断数据编解码同配置数据编解码
+3.3 JSON 数据
+目前支持以下 JSON 命令：
+-GET_WIFI_ST_REQ(30020)：获取设备 WIFI 状态（STA），应答
+为 GET_WIFI_ST_RESP (30021)
+数据定义如下：
+用户请求：{"CID":30020}
+设备应答：{"CID":30021,
+"RC":0, //0 为命令执行成功
+"PL":{
+"WConn":1, //0,WIFI 未连接 1,WIFI 已连接
+"R": 1,//成功时无此参数或者为 0，WIFI 连接
+失败时给错误码，1：连接中，2: AP 不存在，3：密
+码错误，4：其他连接错误。
+"SConn":1, //0,未连接 MQTT 服务器 1,已连接
+MQTT 服务器
+
+
+--- page 11 ---
+"HSConn":1, //0,未连接 HTTP 服务器 1,已连
+接 HTTP 服务器
+//"UConn":1, //0,串口与逆变器通信不正常 1,
+串口与逆变器通信正常 2,未知协议 (为提高配网速度，
+暂删除此项)
+"RSSI": "-XX", //AP 信号强度，传 RSSI 原始值，
+-30~-80，单位为 dBm
+"SSID":"xxxxxxxx"
+}
+}
+-GET_NET_ST_REQ(30022) ： 获 取 设 备 网 络 状 态 ， 应 答 为
+GET_NET_ST_RESP (30023)
+数据定义如下：
+用户请求：{"CID":30022
+"PL":{
+"Ping":"xxxxxx", //可选 PL，用于诊断通讯 Ping
+地址
+}
+}
+设备应答：{"CID":30023,
+"RC":0, //0 为命令执行成功
+"PL":{
+"Server":"xxxxxx", //服务器地址，设备实际通
+
+
+--- page 12 ---
+讯的服务器地址信息。
+"IP":"xx.xx.xx.xx",
+"Subnet":"xx.xx.xx.xx",
+"GW":"xx.xx.xx.xx",
+"DNS":"xx.xx.xx.xx", //AP 信号强度
+"SConn":1, //0,未连接服务器 1,已连接服务
+器
+"ProtocolNo":"xxxxxxx", //采集协议编码
+"ProtocolVerCode":1, //采集协议版本数值
+"Ping":1, //0,Ping 不通地址 1,Ping 通地址
+}
+}
+-GET_UART_ST_REQ(30024) ： 获 取 设 备 UART 状 态 ， 应 答 为
+GET_UART_ST_RESP (30025)
+数据定义如下：
+用户请求：{"CID":30024,
+"PL":{
+"CmdType":"xxxxxxxxx",// 包 含
+gatherSingleDevProps 、 gatherSingleDevEvents 和
+scanSingleDev(暂未用到，预留)三种
+"CmdNo":"xxxxxxxxx",//采集协议中的 cmdNo
+字段(注意字母 C 的大小写)
+
+
+--- page 13 ---
+"Req":"xxxxxxxxx",// ASCII 码，串口发送数据，
+实际串口输出为对应十六进制报文。
+"Uart": {//有"Uart"字段时，表示需要使用此
+字段中的串口参数
+"BaudRate": 9600,
+"DataBit": 8,
+"ParityBit": "NONE",//NONE- 无
+ODD-奇校验 EVEN-偶校验
+"StopBit": 1
+}
+}
+}
+设备应答：{"CID":30025,
+"RC":0, //0 为命令执行成功(串口与逆变器通信
+正常，即连接正常) 1 为命令执行不成功(串口与逆变
+器通信不正常，即连接异常) 2 为未知协议
+"PL":{
+"Rsp":"xxxxxxxxx",//串口返回数据
+}
+}

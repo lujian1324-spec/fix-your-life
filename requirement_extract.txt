@@ -1,0 +1,3214 @@
+
+===== PAGE 1 =====
+SierroEnergyApp需求⽂档
+SierroEnergyApp―产品需求⽂档(PRD)
+版本:v1.1
+⽂档⽇期:2026-06-06
+来源:https://lujian1324-spec.github.io/energy-app/
+项⽬仓库:https://github.com/lujian1324-spec/energy-app
+Figm a设计档：
+•
+DesignSystem:https://www.figma.com/design/bqyPDvjbX8BM u5dYY3L3ps/Sierro_Handoff?
+node-id=0-1&t=ssb6CRyD7mQxU4l0-1
+•
+FinalScreens:https://www.figma.com/design/bqyPDvjbX8BM u5dYY3L3ps/Sierro_Handoff?
+node-id=14-4304&t=ssb6CRyD7mQxU4l0-1
+⽬录
+1.[产品概述](#1-产品概述)
+2.[技术架构](#2-技术架构)
+3.[信息架构&⻚⾯导航](#3-信息架构--⻚⾯导航)
+4.[功能模块详细说明](#4-功能模块详细说明)
+◦
+4.1[概览⻚（Overview/DeviceDetail）―能源驾驶舱](#41-概览⻚-overview--能源驾驶舱)
+◦
+4.2[⾸⻚/设备⻚（Homepage/Device）―设备管理中⼼](#42-⾸⻚/设备⻚-
+homepage/device--设备管理中⼼)
+◦
+4.3[设备设定⻚（DeviceSetting）](#43-设备设定⻚-device-setting)
+◦
+4.4[能源洞察⻚（Insights）](#44-能源洞察⻚-insights)
+◦
+4.5[设定⻚（Setting）](#45-设定⻚-setting)
+◦
+4.6[个⼈资料⻚（Profile）](#46-个⼈资料⻚-profile)
+
+===== PAGE 2 =====
+◦
+4.7[注册登⼊（Signup&Login）](#47-注册登⼊-signup-login)
+5.[通⽤组件说明](#5-通⽤组件说明)
+6.[数据模型&状态管理](#6-数据模型--状态管理)
+7.[通信协议](#7-通信协议)
+8.[数据信任体系](#8-数据信任体系)
+9.[⽆障碍与合规（ADA/WCAG ）](#9-⽆障碍与合规-adawcag)
+10.[⾮功能性需求](#10-⾮功能性需求)
+11.[设计规范](#11-设计规范)
+12.[增⻓引擎设计](#12-增⻓引擎设计)
+13.[版本规划](#13-版本规划)
+14.[版本与部署](#14-版本与部署)
+
+变更说明（v1.0→v1.1）
+变更类型 内容
+⻚⾯重命名 Peak Shaving→ Smart Schedule ； Stats→ Insights ； Setting→
+Profile
+功能增强 Overview重构为"能源驾驶舱"，Device升级为"设备管理中⼼"
+新增章节 数据信任体系（第8章）、⽆障碍合规（第9章）、增⻓引擎设计（第12章）、版本
+规划（第13章）
+技术架构 补充架构重构路线图和新增技术选型
+北美本地化 增加TOU费率、英制单位、12h制、WCAG合规等北美市场要求
+账号登录：邮箱OTP，apple,google账号；略、分析能源消耗数据，并通过蓝⽛（BLE）或串⼝
+（M odbus）协议与物理设备进⾏通信。
+
+===== PAGE 3 =====
+1.2⽬标⽤⼾
+⽤⼾类型 场景描述 市场优先级
+北美家庭储能⽤⼾ 查看设备数据，管理设
+备使⽤情况，利⽤TOU
+峰⾕电价差套利，降低
+电费
+P0
+  
+  
+  
+1.3北美竞品格局
+品牌 市场定位 App评分 
+EcoFlow ⾼端便携储能 AppStore4.6★ 
+J ackery 中端⼾外储能 AppStore4.3★ 
+AnkerSolix 消费级⼊⼝ AppStore4.5★ 
+Bluetti 性价⽐家⽤储能 AppStore3.8★ 
+1.4核⼼价值主张
+•
+📊 实时监控：随时查看储能电站电量、剩余时⻓、输⼊/输出功率
+•
+⚡ 智能⽇程：基于TOU费率⾃动优化充放电，节省北美电费
+•
+🌱 绿⾊叙事：CO ₂ 减排可视化+社交分享+碳积分体系
+•
+📱 PW A离线：⽀持离线访问，可安装到桌⾯
+
+===== PAGE 4 =====
+2.技术架构
+2.1前端技术栈
+技术 ⽤途
+React18 核⼼UI框架
+TypeScript 类型安全开发
+Vite 构建⼯具
+TailwindCSS 原⼦化CSS样式
+Fram erM otion 动画与过渡效果（按需引⼊，
+控制包体积）
+ReactRouterDOM  前端路由
+Zustand 全局状态管理
+LucideReact 图标库
+2.2存储与协议
+技术 ⽤途
+IndexedDB(SierroDB) 本地数据库，存储历史数据和
+⽤⼾资料
+localStorage(Zustand
+persist)
+状态持久化，key: Sierro-
+storage
+W ebBluetoothAPI(BLE) 蓝⽛低功耗设备连接
+
+===== PAGE 5 =====
+W ebSerialAPI(M odbus) 串⼝设备通信
+ServiceW orker PWA离线⽀持
+2.3新增技术选型（路线图）
+技术 ⽤途 优先级
+Recharts或Visx 替代⼿写SVG图表，⽀
+持交互
+P1
+ReactHookForm +
+Zod
+表单验证（⽇程参数、个
+⼈资料）
+P1
+i18next 国际化框架，北美英语/
+西语⽀持
+P1
+Vitest+Testing
+Library
+单元/集成测试 P1
+Sentry 线上错误监控 P1
+TanstackQuery 数据获取/缓存层（v2.0
+接⼊云API时）
+P2
+Storybook 组件⽂档化+设计系统同
+步
+P2
+PostHog 隐私友好的产品分析 P2
+Capacitor 上架AppStore/Play
+Store（可选）
+P2
+2.4架构重构路线图
+短期（v1.2）⽬标结构：
+
+===== PAGE 6 =====
+代码块src/ 
+├──  components/ 
+│    ├──  ui/              # 原⼦组件（ Button, Card, Badge, Modal... ） 
+│    ├──  charts/          # 图表组件（ LineChart, BarChart, RingChart ） 
+│    └──  layout/          # 布局组件（ Header, TabBar, PageWrapper ） 
+├──  data/ 
+│    ├──  sources/         # 统⼀数据源抽象层 
+│    │    ├──  bleSource.ts       # BLE 真实数据 
+│    │    ├──  modbusSource.ts    # Modbus 真实数据 
+│    │    └──  mockSource.ts      # 模拟数据（可开关） 
+│    └──  repositories/    # 数据仓库（封装读写逻辑） 
+├──  stores/ 
+│    ├──  deviceStore.ts 
+│    ├──  scheduleStore.ts 
+│    ├──  settingsStore.ts 
+│    ├──  statsStore.ts 
+│    └──  notificationStore.ts 
+├──  types/               # 集中管理  TypeScript 类型定义 
+└──  services/            # 预留：云服务  API 层（ v2.0+ ） 
+3.信息架构&⻚⾯导航
+3.1导航结构
+应⽤采⽤底部Tab导航（BottomNavigation），共3个⼀级⻚⾯：
+代码块
+Sierro App 
+├──  /devices        →   设备⻚（ Homepage/DEVICE ） 
+        └──  [ ⼦层 ]     →   概览⻚（ OVERVIEW/Device Detail ） 
+├──  /insights       →   能源洞察⻚（ INSIGHTS ） [ 原  Stats] 
+└──  /Setting        →   設定⻚（ SETTING ） 
+        └──  [ ⼦层 ]     →   个⼈中⼼⻚（ PROFILE ） 
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+1
+2
+3
+4
+5
+6
+
+===== PAGE 7 =====
+3.2底部导航Tab配置
+顺序 路由 标签 图标 变更说明
+1 /devices DEVICE
+
+Home
+ 不变
+4 /insights INSIGHTS TrendingUp
+ 原STATS/
+/stats
+
+5 /setting SETTING Setting
+ 
+
+===== PAGE 8 =====
+4.功能模块详细说明
+4.1概览⻚（Overview/DeviceDetail）―能源驾驶舱
+路由: /
+功能定位:应⽤主界⾯，以"能源汽⻋仪表盘"为设计理念，实时展⽰当前连接储能设备的运⾏状态。
+4.1.1重构后界⾯布局
+代码块
+┌────────────────────────────────────┐ 
+│   ←            Fridge 🔽        ⚙  🔔  │ 
+│              Connected             │   ←  顶栏：返回 +设备名 + 状态 +设定 + 通知 
+├────────────────────────────────────┤ 
+│                                     │ 
+│          ╭ ───────────── ╮             │ 
+│          │    78%       │             │   ←  Hero: 电量环  + 剩余时⻓ 
+│          │   ~4.2 hrs   │             │ 
+│          ╰ ───────────── ╯             │ 
+│                                     │ 
+│    Input                Output      │   ←  输⼊源  + 输出功率 
+│    100W   +   30W       420W        │ 
+│     AC       Solar                  │ 
+│                                     │ 
+├────────────────────────────────────┤ 
+│   Real-Time Power              75%  │   ←  功率趋势 
+│   ▁▂▃▅▇▆▅▃▂▁▂▃ ▄ ▅▆▇▆▅▃                │ 
+│    Battery   AC   Solar   Output    │ 
+│                                    │ 
+└────────────────────────────────────┘ 
+4.1.2⻚⾯各状态
+状态 说明
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+
+===== PAGE 9 =====
+Connected 设备在线，通信正常
+Disconnected 设备离线
+狀態 Connected；多装置
+（可切换）
+Connected；仅⼀台装
+置（不可切换）
+Disconnected 加載中
+介⾯
+
+說明 有多装置时，名称右侧
+有 🔽 可切换装置
+仅⼀台装置时，名称右
+侧⽆ 🔽 ，⽆法切换装置
+装置为Disconnected
+时，数字以-呈现。图
+表则呈现：
+•
+标题Device
+disconnected
+•
+副标Reconnect
+thedeviceto
+viewchartdata.
+加載中時呈現此畫⾯
+4.1.3核⼼U I模块
+模块 功能描述 版本
+设备选择下拉菜单
+ 顶部下拉菜单，⽀持多设备切换；显⽰各设备在线状态
+
+v1.0
+电量环形图（BatteryRing） 中央⼤型圆形进度指⽰器，显⽰当前主电池电量百分⽐。
+詳⾒4.1.3电量环形图&剩余时⻓计算
+v1.0
+
+===== PAGE 10 =====
+
+剩余/充電时⻓显⽰
+
+环形图内显⽰预计剩余/充电使⽤时⻓
+•
+100%不显⽰⽂字
+•
+在充电时显⽰预计充电时⻓（1h24mtofull）
+•
+⾮在充电时显⽰剩余使⽤时⻓（1h24mremaining)
+•
+Disconnected时显⽰Disconnected
+v1.1新增
+输⼊/输出功率标签
+
+显⽰InputAC,Solar以及Output共三个数值
+
+v1.1增强
+
+实时功率折线图Real-Tim e
+Power
+
+SVG折线图，展⽰Battery/AC/Solar/Output功率曲线
+⽤⼾可点击图表下⽅选项切换。
+Battery(⽩⾊)
+ AC(綠⾊)
+Solar(绿⾊)
+ Output(橘⾊)
+v1.0
+4.1.4电量环形图&剩余时⻓计算
+代码块
+
+===== PAGE 11 =====
+剩余时⻓（⼩时） = ( 电池容量  × 当前电量 % / 100) / 当前输出功率 (W) × 1000 / 1000 
+依照是否在充电（在充电者顶部会有 ⚡ ）、Connected/Disconnected、BatteryLevel（60-100%绿
+⾊；20-59%橘⾊；1-19%红⾊），共有9种状态，详⻅5.1BatteryRing（电池环形图）。
+4.1.5实时功率折线图
+•
+⽀持切换数据源：Battery/AC（市电输⼊）/Solar（太阳能输⼊）/Output（⽤电输出）
+•
+使⽤SVG绘制，响应式宽度
+•
+数据来源：BLE/M odbus真实数据
+Battery(⽩⾊)
+ AC(绿⾊)
+Solar(绿⾊)
+ Output(橘⾊)
+图表可交互，⽤⼾可点击图表查看数据。
+1
+
+===== PAGE 12 =====
+圖表交互
+4.1.6通知系统
+详细规格请⻅4.2.5通知系統，这边仅会显⽰该装置的通知。
+4.2⾸⻚/设备⻚（Hom epage/Devices）―设备管理中⼼
+路由: /devices
+
+===== PAGE 13 =====
+功能定位:管理所有已添加的储能设备，⽀持多设备监控；从"列表"升级为"设备管理中⼼"。
+4.2.1核⼼功能
+功能 说明 版本
+设备列表
+ 展⽰所有已添加设备，含图
+标、型号、电池电量、开关按
+钮，详⻅4.2.3设备列表
+
+v1.0
+添加设备 ⽀持2种添加⽅式，详⻅
+4.2.4添加设备⽅式（2种）
+與流程
+v1.0
+通知系统&最新通知Banner
+ 右上⻆为全部装置的通知。
+最新装置亦会以Banner形式
+出现在⾸⻚上⽅，⽤⼾可按Ｘ
+关掉
+
+
+
+BLE蓝⽛扫描 通过WebBluetoothAPI扫
+描并连接附近蓝⽛设备
+v1.0
+QR⼆维码扫描
+
+通过摄像头扫描⼆维码添加设
+备（集成jsQR库）
+v1.0
+4.2.2⻚⾯各状态
+状态 预设2-3张卡 Em ptyState空
+装态
+多卡 有通知时 加载时
+介⾯
+
+===== PAGE 14 =====
+說明 最新新增的设备卡会在最上⾯ 
+4.2.3设备列表
+U I組成 說明
+DisplayIcon图标 ⽤⼾可⾃⾏选择的图标，⽬前有⼋个样式。
+BatteryTag电量标签
+
+===== PAGE 15 =====
+类似电量环形图，但以电池横式形式呈现，依照是否在充电（在
+充电者中间会有 ⚡ ）、Connected/Disconnected、Battery
+Level（60-100%绿⾊；20-59%橘⾊；1-19%红⾊），共有9
+种状态。
+设备名称 ⽤⼾可⾃⾏取名，超过两⾏以...显⽰。
+型号 Sierro1000,Sierro2000等
+开关 ⽤⼾可透过开关开启/关闭电源，若装置为disconnected状
+态，按钮为disabled，不可点击
+
+
+===== PAGE 16 =====
+4.2.4添加设备⽅式（2种）与流程
+⽅式 说明
+BLE蓝⽛扫描 扫描附近的Sierro设备并选择连接
+QR⼆维码 通过扫描设备上的⼆维码快速识别指
+定设备
+⾸次添加设备时，⽤⼾需要完成必要权限授权后，才能开始设备连接流程。
+Sierro提供两种添加设备⽅式：
+•
+BLE蓝⽛扫描（默认⽅式）
+◦
+⾃动扫描附近可连接的Sierro设备。
+◦
+扫描结果仅显⽰符合Sierro设备规范的设备，不显⽰⽿机、键盘等其他蓝⽛设备。
+◦
+适⽤于⼤多数添加设备场景。
+•
+QRCode（备⽤⽅式）
+◦
+通过扫描设备侧⾯的⼆维码快速识别指定设备。
+◦
+适⽤于同时存在多台设备或⽤⼾希望直接连接特定设备的场景。
+◦
+QRCode仅⽤于识别设备⾝份，后续设备连接仍需依赖Bluetooth与LocalNetwork。
+连接设备时需具备：
+•
+Bluetooth权限
+•
+LocalNetwork权限
+两者缺⼀不可。
+整体流程
+代码块
+⽤⼾点击  + Add Device 
+        │ 
+        ▼ 
+检查  Bluetooth / Local Network 权限 
+        │ 
+ ┌──────┴──────┐ 
+ │              │ 
+未授权         已授权 
+1
+2
+3
+4
+5
+6
+7
+8
+
+===== PAGE 17 =====
+ │              │ 
+ ▼              ▼ 
+权限引导⻚     检查  Bluetooth 状态 
+                    │ 
+            ┌──────┴──────┐ 
+            │              │ 
+          未开启          已开启 
+            │              │ 
+            ▼              ▼ 
+      Bluetooth Off    Add Device 主⻚⾯ 
+                              │ 
+                  ┌───────────┴───────────┐ 
+                  │                        │ 
+               BLE 扫描                  Scan QR 
+                  │                        │ 
+                  ▼                        ▼ 
+               发现设备               QR 扫描成功 
+                  │                        │ 
+                  ▼                        ▼ 
+             点击  连接设备          单独装置确认⻚  点击  连接 
+                  │                        │ 
+                  └───────────┬───────────┘ 
+                              ▼ 
+                        Device Name 
+                              ▼ 
+                         Display Icon 
+                              ▼ 
+                   返回  ⾸⻚  显⽰  Success Toast 
+                              ▼ 
+                    检查  Notification 权限 
+                              │ 
+                 ┌────────────┴────────────┐ 
+                 │                          │ 
+               已开启                      未开启 
+                 │                          │ 
+                 ▼                          ▼ 
+               结束                 显⽰  Notification 
+                                    Bottom Sheet 
+                                           │ 
+                                           ▼ 
+                                点击  Enable Notifications 
+                                           │ 
+                                           ▼ 
+                                 请求  Notification 权限 
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+
+===== PAGE 18 =====
+前置流程（权限授权）
+触发条件：只要没开Bluetoothand/orLocalNetwork权限（通常是第⼀次开启）
+状态 A_1.1.1_Hom epage A_1.3_AddDevice
+Perm ission
+要求Bluetooth權限
+Alert
+要求LocalNetwork
+權限Alert
+介⾯
+Bllutooth權限Alert
+⽰意
+
+LocalNetwork權限
+Alert⽰意
+
+说明 点击右上⻆+进⼊流程 要求权限前的解释 要求Bluetooth权限 要求LocalNetwork权
+限
+主画⾯各状态
+⽤⼾通常已完成权限授权，但后续仍可能：关闭Bluetooth或关闭LocalNetwork权限
+因此AddDevice主⻚⾯需根据当前设备状态显⽰对应⻚⾯。
+状态
+Perm issionRequired
+Bluetooth或LocalNetwork
+权限未授权
+BluetoothOff
+蓝芽未开启
+蓝⽛有开启
+介⾯
+
+===== PAGE 19 =====
+
+ 
+触发条件 ⽤⼾未授权蓝⽛或区域⽹路时
+会看到的画⾯
+Bluetooth权限已授权，但
+Bluetooth处于关闭状态
+Bluetooth与LocalNetwork
+已授权，且Bluetooth已开
+启。
+说明
+
+•
+点击OpenSettings按钮导
+向SierroAppSetting⻚⾯
+•
+此时右上⻆ScanQRCode
+不能按，disabled，因要
+连结还是需要这两项功能开
+启
+•
+此时右上⻆ScanQRCode
+不能按，disabled，因要
+连结还是需要这两项功能开
+启
+进⼊⻚⾯后⾃动开始扫描附近
+设备。
+
+新增设备流程（蓝芽）
+⽤⼾通过蓝⽛扫描附近设备并建⽴连接。
+流程结束于：Connect->NameYourDevice，后续流程⻅共同流程章节BLE&QRCode共同后续流
+程
+BLE扫描流程
+⽤⼾点击 "BLE 扫描 " →  调⽤  getBleManager() 
+→  触发  Web Bluetooth API 扫描 
+→  显⽰扫描到的设备列表（ isScanning 状态） 
+→  ⽤⼾选择设备  →  handleConnectDevice() 
+1
+2
+3
+4
+
+===== PAGE 20 =====
+→  建⽴连接  →  写⼊  connectionStore 
+ A_1.3.1_AddDeviceM ain
+Page-vBluetooth
+A_1.3.2_AddDeviceM ain
+Page-v第⼀台裝置
+A_1.3.2_AddDeviceM ain
+Page-v多台
+介⾯
+說明 若⽤⼾有开启蓝⽛跟区域⽹
+路，会进⼊此⻚⾯，并⾃动开
+始扫描附近设备。
+扫描超过60秒，但找不到任何
+装置时，会变为以下画⾯
+有顺利侦测到时，底下会出现动态列表
+•
+标题：FoundDevices(数字)
+•
+列表：
+◦
+标题：M odele.g.Sierro1000/2000
+◦
+副标：SerialNumber
+•
+按下Connect会进到BLE&QRCode共同后续流程
+•
+若连接失败会显⽰红⾊Toast(3秒后消失）（如下）
+5
+
+===== PAGE 21 =====
+新增设备流程（QRCode）
+⽤⼾通过扫描设备侧⾯的QRCode快速识别指定设备。
+流程结束于：Connect->NameYourDevice，后续流程⻅共同流程章节BLE&QRCode共同后续流
+程
+ A_1.3.1_AddDeviceM ain
+Page-vDefault
+A_1.3.1_AddDeviceM ain
+Page-vQRCode
+A_1.3.2_DeviceScanned
+介⾯
+
+===== PAGE 22 =====
+
+說明 点击右上⻆ScaQR进⼊流程
+
+•
+若没摄像头权限，需先存取
+权限
+•
+扫描失败会有红⾊Toast
+（如下），成功的话进⼊下
+⼀⻚⾯
+•
+侦测到后会进⼊此⻚⾯，⽤
+⼾需确认型号及号码
+•
+按Rescan返回上⼀⻚
+•
+按ConnectDevice连结装
+置，进到BLE&QRCode
+共同后续流程
+•
+若错误会有红⾊Toast（如
+下）
+
+===== PAGE 23 =====
+
+BLE&QRCode共同后续流程
+设备识别并连接成功后，⽆论通过BLE或QRCode添加，均进⼊统⼀配置流程。
+ A_1.3.3_DeviceName
+-vDefault
+A_1.3.3_DeviceName
+-v有輸⼊
+A_1.3.4_DisplayIcon A_1.1.1_Homepage-
+vToast
+介⾯
+說明 ⽤⼾需帮设备取名，预
+设进⼊编辑状态，按钮
+•
+有输⼊按钮才会变
+可按
+⽤⼾需选择icon，预设
+为闪电icon。
+•
+最新加⼊的设备会
+在最上⽅
+
+===== PAGE 24 =====
+会被键盘推上来
+• 需检测是否重名，
+若重名，输⼊框变
+为错误状态，按钮
+变不可按，有编辑
+后回复原本状态
+
+• Toast3秒后消失
+•
+若⽤⼾没开启
+Notifications，
+Toast消失后会出
+现提醒开通知的
+BottomSheet（下
+图）。⽤⼾按下
+Enable
+otifications，会打
+开要求Send
+Notifications权限
+Alert。
+4.2.5通知系统&最新通知Banner
+通知类型
+通知类型 触发条件 ⽰例（标题应简短）
+低电量警报 电量低于30% 标题:LowBattery
+内⽂:"Batterybelow30%,estimated
+remainingtime:1h24m"
+太阳能状态 太阳能接⼊/断开
+
+标题:SolarConnected/Solar
+Disconnected
+内⽂:"Solarinputdetected,charging
+started."/Solarinputlost,charging
+
+===== PAGE 25 =====
+stopped.
+市电停电报警 市电停电 标题:PowerOutageDetected
+内⽂:“Switchedtobackuppower
+automatically.Estimatedruntime:
+10h.”
+通知交互增强（v1.1）：
+•
+⽀持左滑⼿势揭露删除功能（符合iOS北美⽤⼾习惯）
+•
+⽀持下拉刷新实时数据（P0⼿势需求）
+⻚⾯各状态：
+状态 有通知 ⽰范⻓通知 Em ptyState空状态⽆通知
+介⾯
+
+
+===== PAGE 26 =====
+說明 未读通知会有红点，查看后会
+消除
+标题应简短，⾄多⼀⾏，超过
+以...显⽰。
+内⽂可完整显⽰。会将元件撑
+⾼。
+空装态
+查看、删除通知流程：
+ A_1.1.1_Homepa
+ge-v有未读通知
+A_1.1.1_Homepa
+ge-v有未读通知
+A_1.2_Notificatio
+ns-vSwiped
+A_1.2_Notificatio
+ns-vDeleted
+A_1.1.1_Homepa
+ge-v無未讀通知
+介⾯
+
+ 
+ 
+ 
+ 
+說明
+• 共三个⼊⼝可
+进通知系统，
+a. 系统原⽣
+通知
+b. 最新通知
+Banner
+仅显⽰最
+新通知，
+按Ｘ可关
+掉。若有
+更新通
+知，会盖
+掉原先
+的。
+c. 右上⻆
+🔔 ，有未
+读通知时
+会有红点
+还未查看过的通知
+会有红点
+
+左滑会揭露删除选
+项，点击可删除
+
+
+
+ 返回后，因为已查
+看最新通知， 🔔
+红点跟Banner消
+失
+
+===== PAGE 27 =====
+4.3设备设定⻚（DeviceSetting）
+路由:内嵌于概览⻚（通过props控制显⽰）
+功能定位:展⽰单台储能设备的完整技术参数和实时运⾏数据。
+4.3.1功能列表
+功能 說明
+DeviceNam e设备名称 将⽬前名称显⽰于list上，点击可编辑名称，
+
+===== PAGE 28 =====
+DisplayIcon设备图标 将⽬前图标显⽰于list上，点击可编辑图标，
+DeviceInfo设备信息 点击可进⼊信息列表⻚
+SleepM ode 将⽬前状态（on/off）显⽰于list上，默认off，点击
+可编辑
+BatteryPriority 将⽬前状态（BackupM ode/SavingM ode），默认
+off，显⽰于list上，点击可编辑
+Sm artSchedule 将⽬前状态（on/off）显⽰于list上，默认off，点击
+可编辑
+4.3.2编辑设备名称流程
+ B_1.2_SettingM ain
+Page
+
+B_1.2.1_Device
+Name-vDefault
+B_1.2.1_Device
+Name-v名称有变动
+B_1.2_SettingM ain
+Page-vToast
+介⾯
+
+說明 点击DeviceName
+List
+预设TextFiled为
+Typing状态，键盘打
+开
+•
+当名称有变动，右
+上⻆Save才会变可
+点击状态，按下返
+回SettingM ain
+Page
+•
+按左上⻆返回不儲
+存
+•
+成功Toast3秒消失
+•
+介⾯呈现最新
+DeviceName
+
+
+===== PAGE 29 =====
+4.3.3编辑设备图标流程
+ B_1.2_SettingM ain
+Page
+
+B_1.2.2_DisplayIcon-
+vDefault
+B_1.2.2_DisplayIcon-
+v有改動
+B_1.2_SettingM ain
+Page-vToast
+介⾯
+
+ 
+ 
+ 
+說明 点击DisplayIconList 预设选择原icon，按钮
+若没更动为disabled，
+不可按
+
+•
+有更动按钮才会变
+可点击状态
+•
+点击X关掉不储存
+•
+成功Toast3秒消失
+•
+介⾯呈现最新
+DisplayIcon
+4.3.4查看设备信息
+ B_1.2_SettingM ainPage B_1.2.3_DeviceInfo-vDefault
+介⾯
+
+===== PAGE 30 =====
+
+說明 点击DeviceInfo 展⽰顺序
+•
+M odel型号
+•
+SerialNumber序列号
+•
+Capacity容量（Wh）
+•
+BatteryType电池类型（LiFePO ₄ ）
+•
+ChargingPower最⼤输出（W ）
+•
+OutputPower峰值输出（W ）
+•
+Voltage(V)
+•
+Frequency(Hz)
+
+===== PAGE 31 =====
+•
+BatteryHealth电池健康度(%)
+•
+Cycles循环次数
+•
+Temperature溫度(℉)
+•
+WifiStatusWifi连接状态
+Connected/Disconnecte
+默认设备参数（Sierro1000）
+参数 值
+型号 SR-1000
+序列号 SR-2024-08842
+电池容量 1000Wh
+电池类型 LiFePO ₄ （磷酸铁锂）
+最⼤输出功率 1000W
+峰值输出功率 2000W
+4.3.5睡眠模式(SleepM ode)
+ B_1.2_Setting
+M ainPage
+
+B_1.2.4_Slee
+pM ode-voff
+
+B_1.2.4_Slee
+pM ode-von
+
+B_1.2.4_Slee
+pM ode-v編
+輯時間
+B_1.2.4_Slee
+pM ode-v編
+輯完
+B_1.2_Setting
+M ainPage-v
+Toast
+介⾯
+
+ 
+ 
+ 
+ 
+ 
+
+===== PAGE 32 =====
+說明 点击Sleep
+M odeList
+预设关闭，看
+不⻅底下时间
+•
+schedule
+开关开启
+时，可看
+⻅底下时
+间
+•
+有更动
+Save按钮
+才会变可
+点击状态
+•
+按左上⻆
+返回不储
+存
+TImeWheel
+⽤darkmode
+原⽣元件就好
+这边⽤light
+mode的⽰意
+
+• 成功
+Toast3秒
+消失
+•
+按储存返
+回Setting
+⻚⾯，状
+态更新为
+On
+
+4.3.6BatteryM ode
+ B_1.2_SettingM ain
+Page
+
+B_1.2.5_Battery
+M ode-vDefault
+B_1.2.5_Battery
+M ode-vDefault
+B_1.2_SettingM ain
+Page-vToast
+介⾯
+
+ 
+ 
+ 
+說明 点击BatteryM ode
+List
+默认为BatteryM ode
+
+•
+有更动Save按钮
+才会变可点击状态
+•
+按右上⻆Ｘ不储存
+
+•
+成功Toast3秒消失
+•
+按储存返回
+Setting⻚⾯，呈现
+最新BatteryM ode
+
+===== PAGE 33 =====
+4.3.7智能⽇程⻚(Sm artSchedule)
+路由: /smart-schedule （原 /peak-shaving ）
+功能定位:基于TOU峰⾕电价差异，⾃动化管理储能设备的充放电时间表，实现北美电费最优化。
+命名变更：Peak Shaving→ Smart Schedule ，更符合北美⽤⼾⼼智模型
+4.3.7.1核⼼功能
+功能 说明 版本
+主开关
+ ⼀键开启/关闭智能⽇程功能
+
+v1.0
+功能說明⾴
+ 点击会打开功能说明⻚
+
+
+⽇程管理
+ 初次设定完后会出现，点击进
+⼊编辑模式
+
+
+（阅读&编辑模式） v1.0
+
+===== PAGE 34 =====
+节省⾦额估算
+ 计算并展⽰⽇/⽉/年预计节省
+电费
+公式⾒4.3.7.6节省计算公式
+（阅读&编辑模式）
+24h時鐘可视化
+全天⽇程可视化时钟
+详细规格⻅4.3.6.424h時鐘
+可视化
+
+（仅阅读模式）
+当前状态卡⽚
+实时显⽰当前处于充电/放电/
+待机哪种模式
+
+（仅编辑模式）
+参数设置⾯板
+配置电价和功率限制
+詳細規格⾒4.3.6.5參數交互
+圖表
+
+v1.0
+
+===== PAGE 35 =====
+⽇程冲突检测
+
+新增⽇程时⾃动检测时段重叠
+冲突
+v1.1新增
+4.3.7.2新增，编辑、查看流程
+ B_1.2_Se
+tting
+M ain
+Page
+
+B_1.2.6_S
+mart
+Schedule
+-v
+Default
+off
+B_1.2.6_S
+mart
+Schedule
+-vOpen
+info
+B_1.2.6_S
+mart
+Schedule
+-vEdit
+M ode
+Default
+
+B_1.2.6_S
+mart
+Schedule
+-vEdit
+M ode
+After
+M odificati
+ons
+B_1.2.6_S
+mart
+Schedule
+-vView-
+M ode
+Peak
+Hour
+
+B_1.2.6_S
+mart
+Schedule
+-vView-
+M odeIdle
+B_1.2.6_S
+mart
+Schedule
+-vView-
+M odeOff-
+Peak
+Hour
+介⾯
+
+
+
+ 
+
+
+ 
+ 
+說明 点击
+Smart
+Schedule
+List
+默认
+Schedule
+为关闭装
+态
+
+点击右上
+⻆iIcon
+打开功能
+说明
+•
+开启之后，若为第
+⼀次设定，打开
+edit-mode。若已
+设定过，平常打开
+为View-M ode，右
+上⻆会有编辑钮
+24h時鐘可视化
+•
+詳細規格⾒4.3.6.4
+24h時鐘可视化
+Price
+•
+储存后，变为view-mode阅读
+模式，仅显⽰重要资料：
+estimatedsavings&schedule
+（会指向⽬前的时间点及
+mode）
+•
+按右上⻆编辑，会再进⼊ediit-
+mode编辑模式
+
+
+===== PAGE 36 =====
+•
+⽤⼾⾃⾏填写Peak
+&Off-Peak价格
+（⾮必填），若没
+填底下的
+EstimatedSavings
+就为-
+•
+另可新增Part-time
+price（⾮必填）
+Param eters
+•
+详细规格⻅4.3.6.5
+參數交互圖表
+Estim atedSavings
+•
+系统⾃动计算，公
+式⻅4.3.7.6节省计
+算公式
+4.3.7.3⽇程类型
+类型 说明 颜⾊标识
+Peak 放电时段 橙⾊ #FF9500
+Off-Peak 充电时段
+
+绿⾊ #34C759
+
+idle 闲置设备采⽤GridPower 时钟空隙即为idle状态
+4.3.7.424h時鐘可视化
+时钟规格：
+•
+时钟⿊底
+◦
+为直径300-200的圈圈相减
+◦
+有innershadow的特效
+▪
+X:2
+▪
+Y:2
+▪
+Blur:10
+
+===== PAGE 37 =====
+▪
+Color: #2D2D2D25%
+•
+时间条为直径290-210的圈圈相减
+ 编辑模式edit-m ode 阅读模式view-m ode
+介⾯
+ peakhour
+ off-peak
+ idle
+說明
+• 预设会有peak(橘⾊)
+&off-peak(绿⾊)两个
+时间段
+•
+默认数值：
+◦
+Off-Peak:11PM -
+7AM 
+◦
+Peak:8AM -10
+PM 
+•
+⽤⼾可拖拉两侧调整调
+整时间，底下时间会随
+之变动。时钟空隙即
+为idle状态。
+◦
+交互模式可参考
+iphone>设定>勿
+扰>睡眠
+•
+时间单位/刻度为⼩时
+仅能选择整点时间
+•
+时钟中间上⽅有⽉亮，
+底部有太阳协助理解时
+间概念
+•
+阅读模式不能更动时间
+•
+中间不会有⽉亮和太阳的图标，但会有类似时钟指针的设计，指
+向⽬前时间，底部对应的模式也会亮起
+
+4.3.7.5參數交互圖表
+预设会是默认值，若有更动，optimize按钮会亮起，⽤⼾再次点击会恢复默认值
+
+===== PAGE 38 =====
+参数说明与默认值
+参数 默认值（北美） 说明
+峰值电价（PeakPrice）
+
+⽆ ⾼峰时段电⽹电价（PG&EE-
+TOU-C默认）
+⾕值电价（Off-PeakPrice） ⽆ 低⾕时段电⽹电价
+最⼤充电功率（M axCharge
+Power）
+Sierro1000:400W
+Sierro2000:1000W
+充电功率上限（W ）
+最⼤放电功率（M ax
+DischargePower）
+Sierro1000:500W
+Sierro2000:1000W
+放电功率上限（W ）
+电池最低电量限制（M in
+SOC）
+0%
+（已预留保护值）
+防⽌过放保护
+电池最⾼电量限制（M ax
+SOC）
+100%
+（已预留保护值）
+防⽌过充保护
+參數計算公式
+待補
+4.3.7.6节省计算公式（改进版）
+当前公式（v1.0，过于简化）：
+代码块
+
+===== PAGE 39 =====
+⽇节省  = ( 峰值电价  - ⾕值电价 ) × 电池容量 (kWh) × 每⽇循环次数 
+改进公式（v1.1）：
+代码块
+⽇节省  = ( 峰值电价  - ⾕值电价 ) 
+       × 电池容量 (kWh) 
+       × 每⽇循环次数 
+       × 充电效率 (0.95)    ←  LiFePO ₄  充电损耗约  5% 
+       × 放电深度 (0.90)    ←  实际可⽤容量约  90% （ DoD 限制） 
+       × 执⾏率 (0.85)      ←  并⾮每天都满充满放 
+ 
+⽉节省  = ⽇节省  × 30 
+年节省  = ⽇节省  × 365 
+4.3.7.7⽇程冲突检测
+代码块
+function checkScheduleConflict(newSchedule, existingSchedules) { 
+  for (const existing of existingSchedules) { 
+    if (timeRangesOverlap(newSchedule, existing)) { 
+      return { 
+        conflict: true, 
+        with: existing.name, 
+        overlap: calculateOverlapRange(newSchedule, existing) 
+      }; 
+    } 
+  } 
+  return { conflict: false }; 
+} 
+4.3.8删除装置流程
+ B_1.2_SettingM ainPage B_1.2.7_DeleteDevice A_1.1.1_Homepage
+介⾯
+1
+1
+2
+3
+4
+5
+6
+7
+8
+9
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+
+===== PAGE 40 =====
+
+說明
+点击最下⽅DeleteDevice 出现⼆次确认视窗
+•
+标题：Delete[Device
+Name]?
+•
+內⽂：Thisdevicewill
+beremovedfromyour
+account.Youcanaddit
+againatanytime.
+•
+按下Delete钮后，返回
+⾸⻚，并出现Toast（中
+性），3秒后消失
+•
+⽂案：[DeviceName]
+deleted
+4.4能源洞察⻚（Insights）
+路由: /insights （原 /stats ）
+功能定位:以可视化图表形式展⽰历史能源使⽤数据，提供AI洞察建议，从"统计"升级为"能源洞察"。
+命名变更：Stats→ Insights ，体现更主动的数据洞察价值
+4.4.1核⼼功能
+
+===== PAGE 41 =====
+功能 说明 版本
+数据分享
+ 调⽤WebShareAPI分享统计数据 v1.0
+概览统计卡⽚
+ 展⽰关键指标
+•
+天数（不受时间周期切换控制）
+•
+CO2（受时间周期切换控制）
+
+v1.0
+
+•
+Day/Week/M onth/Range四个维度切换
+•
+会影响CO2以及充放电图表
+
+v1.0
+充放电圖表
+ 对⽐各时间段的充电量和⽤电量
+显⽰数据为全部装置总和
+DayView
+ WeekView
+M onthView
+ Range
+v1.0
+
+4.4.2⻚⾯各状态
+（Day/W eek/M onth/RangeView/Em ptyState)
+ DayView W eekView M onthView Range 加載⾴
+
+===== PAGE 42 =====
+Em ptyState
+尚未新增裝置
+介⾯
+說明
+
+数据为当天，
+⾮过去24⼩
+时，因此若⽬
+前为下午四
+点，数据亦只
+到下午四点
+数据为当周，
+⾮过去七天，
+因此若当天为
+礼拜三，数据
+亦只到礼拜三
+数据为当⽉，
+⾮过去30天，
+因此若当天为
+27号，数据亦
+只到27号
+•
+预设为当
+⽉底往前
+推三个
+⽉，例如
+⽬前为
+5/27，预
+设为3/1-
+5/31
+•
+可以选取
+的最⻓时
+间段为三
+个⽉
+尚未新增装置
+时
+
+加载时，天
+数、Co2、图
+表会有
+skeleton
+時間
+標題
+格式:M M M d,
+yyyy
+•
+e.g.
+◦
+M ar
+27,
+2026
+◦
+Jun
+27,
+2026
+◦
+Sep
+27,
+2026
+
+格式:
+•
+⼀般：
+M M M d‒
+d,yyyy
+◦
+e.g.
+Sep
+24-
+30,
+2026
+•
+跨⽉：
+M M M d‒
+M M M d,
+yyyy
+◦
+e.g.
+Sep
+27‒
+Oct3,
+2026
+格式:M M M M
+（全名）yyyy
+•
+e.g.
+◦
+M arch
+2026
+◦
+June
+2026
+◦
+Septe
+mber
+2026
+格式:M M M d,
+yyyy‒M M M 
+d,yyyy
+•
+e.g.
+◦
+Dec1,
+2025-
+Feb
+28,
+2026
+◦
+M ar1,
+2026
+‒M ay
+31,
+2026
+
+- -
+
+===== PAGE 43 =====
+•
+跨年：
+M M M d,
+yyyy‒
+M M M d,
+yyyy
+◦
+e.g.
+Dec
+28,
+2026
+‒Jan
+3,
+2027
+圖表
+
+折线（Input）
+＋⾯积图
+（Output）
+双柱状图
+
+折线（Input）
+＋⾯积图
+（Output）
+折线（Input）
+＋⾯积图
+（Output）
+- -
+x軸
+標籤
+
+12AM ,4AM ,
+8AM ,12PM ,
+4PM ,8PM ,
+12AM （12h
+制）
+Sun,M on,
+Tue,Wed,
+Thu,Fri,Sat
+（从礼拜天开
+始）
+
+五个⽇期，以
+当⽉⼀号开
+始，每七天⼀
+个标签e.g.
+M ay1,M ay8,
+M ay15.M ay
+22,M ay29
+若时间跨度⼤
+于⼀个⽉，仅
+标记⽉份，
+e.g.图⽚为
+3/1-5/31，仅
+标记M arch,
+April,M ay,若
+时间跨度孝于
+⼀个⽉，标签
+⽅式参照前⽅
+- -
+时间切换
+Day/Week/M onth/Range的元件为最上层切换周期时间⽅式，会影响底下CO2和图表的数据维
+度。
+Day/Week/M onth/Range之下还有 ◀  ▶ 可前后切换⽇期
+•
+若为当天∕周∕⽉，⽆ ▶ ，不可往后切换
+•
+若为有历史数据以来第⼀天，⽆ ◀ ，不可再往前切换
+•
+中间的天数，有 ◀  ▶ 两者
+Day/W eek/
+M onth
+以Day為例
+
+
+===== PAGE 44 =====
+預設
+當天/週/⽉，不能往後切換
+有歷史紀錄的第⼀天不能再
+往前切換
+⾮當天/第⼀天可以切換後⼀
+天
+Range
+
+
+• 使⽤原⽣DatePicker元
+件，改配⾊
+
+图表交互弹窗定位
+
+===== PAGE 45 =====
+图表可交互，⽤⼾点击某时间点，会出现当下时间点的数据弹窗，以不遮挡标题、当下图表为基准，
+并尽量不要超出卡⽚范围，以下⽰范两种图形的弹窗定位
+ 与左侧图表交互 与中间图表交互 与右侧图表交互
+折线＋⾯积
+图
+弹窗定位：选取时间右侧、置
+底
+弹窗定位：选取时间右侧、置
+底
+弹窗定位：选取时间左侧、置
+底
+双柱状图
+上⽅無空間
+弹窗定位：选取时间右侧、置
+底
+上⽅有空間
+弹窗定位：选取时间上⽅，⾄
+左对⻬
+上⽅無空間
+弹窗定位：选取时间右侧、置
+底
+上⽅有空間
+弹窗定位：选取时间上⽅，⾄
+中对⻬
+上⽅無空間
+弹窗定位：选取时间左侧、置
+底
+上⽅有空間
+弹窗定位：选取时间上⽅，⾄
+右对⻬
+4.4.3概览统计卡⽚（2张）
+指标 ⽰例值 说明
+使⽤天数 128Days
+• 計算⽅式：第⼀次添加進
+來開始算第⼀天，中間沒
+使⽤也會繼續算
+
+===== PAGE 46 =====
+CO ₂ Reduced（碳减排） 6.4kg
+
+•
+等效碳排放减少量
+•
+受时间周期切换影响
+•
+需换算成种植多少树
+4.4.4数据分享（待修改）
+•
+点击Share按钮调⽤ navigator.share()(WebShareAPI)
+•
+分享内容：天数、CO2减排放、InputOutput图
+•
+iOS/Android浏览器⽀持原⽣分享⾯板
+分享流程
+ C_1.1_InsightsM ainPage C_1.2.1_Share原⽣分享⾯
+板
+C_1.2.2_Share图⽚
+介⾯
+
+
+說明
+
+点击右上⻆分享
+
+打开原⽣分享⾯板
+
+•
+分享出去的图为当下选取
+时间的数据所⽣成
+
+===== PAGE 47 =====
+•
+⽬前没有很多数据可以分
+享，先简单版，把可控制
+的UI拿掉，做成像⽬前⻚
+⾯的截图即可，底部放
+SierroLogo
+
+4.5設定⻚（Setting）
+路由: /settings
+功能定位:⽤⼾个⼈信息管理、系统配置、设备连接管理及会员系统。
+4.5.1信息架构重设计
+代码块
+Setting 
+├──  👤  个⼈信息（头像、姓名、 Manage My Account/Profile ⼊⼝、 Membership Badge ） 
+├──  Push Notifications 
+│    ├──  Power Outage 
+│    ├──  Low Battery 
+│    └──  Solar Status 
+├──  Support 
+│    └──  Feedback 
+├─  Privacy Policy 隐私政策 
+├─  Terms of Use ⽤⼾协议 
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+
+===== PAGE 48 =====
+4.5.2⻚⾯各状态
+ D_1.1_SettingM ain
+Page-vDefault
+M em ber⽆头贴
+D_1.1_SettingM ain
+Page-vFounding
+M em ber⽆头贴
+D_1.1_SettingM ain
+Page-vDefault
+M em ber有头贴
+D_1.1_SettingM ain
+Page-vFounding
+M em ber有头贴
+介⾯
+
+===== PAGE 49 =====
+說明
+
+•
+头贴为绿框
+•
+默认头贴为闪电图
+标
+•
+头贴为⻩框
+•
+默认头贴为钻⽯图
+标
+•
+有Founding
+M ember标签
+◦
+格式：
+Founding
+M ember#42
+•
+头贴为绿框
+
+•
+头贴为⻩框
+•
+有Founding
+M ember标签
+◦
+格式：
+Founding
+M ember#42
+4.5.3⽤⼾个⼈信息卡⽚
+元素 说明
+头像
+
+框线颜⾊
+•
+⼀般会员绿框
+•
+FoundingM embe⻩框
+默认头贴
+•
+⼀般会员闪电
+•
+FoundingM ember钻⽯
+⽤⼾名 显⽰姓名
+点击M anageM yAccount跳转 点击跳转⾄Profile个⼈资料
+编辑⻚
+
+===== PAGE 50 =====
+4.5.4系统设置列表
+设置项 类型 说明
+PushNotifications（推送通
+知）
+•
+PowerOutage开关
+•
+LowBattery开关&选择
+•
+SolarStatus开关
+•
+开启/关闭系统推送通知
+•
+默认都开启
+
+Feedback（反馈）
+
+弹出寄送反馈模态框
+
+可填写反馈，寄送⾄客服信
+箱，会⾃动带⼊会员信箱
+4.5.4.1PushNotifications（推送通知）
+通知类型⽬前共以下三种，亦可参考通知類型
+通知类型 ⽂案
+市电停电报警
+PowerOutage
+标题:PowerOutage
+内⽂:Getalertedduringoutages
+低电量警报
+LowBattery
+标题:LowBattery
+内⽂:
+•
+关闭时：Getnotifiedwhenbattery
+getslow
+•
+开启时：Getalertedwhenbattery
+fallsbelow[]%
+太阳能状态 标题:SolarStatus
+
+===== PAGE 51 =====
+SolarStatus 内⽂:Getalertedwhensolarconnects
+ordisconnects
+PowerOutage编辑流程
+ D_1.1_SettingM ain
+Page
+D_1.2.1_Power
+Outage-von
+D_1.2.1_Power
+Outage-voff
+D_1.1_SettingM ain
+Page-v更新
+介⾯
+說明
+
+•
+默认为开启
+•
+点击Power
+Outage
+此功能较简单，仅开关
+
+•
+有开/关，更改设
+定，右上⻆save钮
+才会亮起
+
+•
+点击后返回设定主
+⻚⾯，有成功
+Toast，3秒后消失
+•
+PowerOutage更
+新为Off
+LowBattery编辑流程
+ D_1.1_Settin
+gM ainPage
+D_1.2.2_Low
+Battery-von
+D_1.2.2_Low
+Battery-v修
+改
+D_1.1_Settin
+gM ainPage-
+v更新
+D_1.2.3_Low
+Battery-voff
+
+D_1.1_Settin
+gM ainPage-
+v更新
+介⾯
+
+===== PAGE 52 =====
+說明
+
+•
+默认为开
+启30%
+◦
+Subtit
+le:
+Get
+alerte
+d
+when
+batter
+yfalls
+below
+30%
+•
+点击Low
+Battery
+此功能开关
+外，亦可选择
+要被通知的电
+量阀值，默认
+为30%，亦有
+20%,10%的
+选项
+
+（⽰范更改电量阀值30%-
+>20%）
+•
+有更改设定，右上⻆save钮
+才会亮起
+•
+⻚⾯上Subtitle⽴即更新为:
+Getalertedwhenbattery
+fallsbelow20%
+•
+点击后返回设定主⻚⾯，有
+成功Toast，3秒后消失
+•
+外层Subtitle更新
+
+（⽰范开->关）
+•
+有更改设定，右上⻆save钮
+才会亮起
+•
+⻚⾯上Subtitle⽴即更新为:
+Getnotifiedwhenbattery
+getslow
+•
+点击后返回设定主⻚⾯，有
+成功Toast，3秒后消失
+•
+外层Subtitle更新，且右侧
+状态亦更新为Off
+SolarStatus编辑流程
+ D_1.1_SettingM ain
+Page
+D_1.2.3_Solar
+Status-von
+D_1.2.2_Solar
+Status-voff
+
+D_1.1_SettingM ain
+Page-v更新
+
+===== PAGE 53 =====
+介⾯
+說明
+
+•
+默认为开启
+•
+点击SolarStatus
+此功能较简单，仅开关
+
+•
+有开/关，更改设
+定，右上⻆save钮
+才会亮起
+
+•
+点击后返回设定主
+⻚⾯，有成功
+Toast，3秒后消失
+•
+SolarStatus更新
+为Off
+4.5.4.2Feedback（反馈）
+Feedback送出流程
+ D_1.1_Setting
+M ainPage
+D_1.3.1_Feedba
+ck-vDefault
+D_1.3.1_Feedba
+ck-vTyping短
+內容
+D_1.3.1_Feedba
+ck-v⻑內容
+D_1.1_Setting
+M ainPage-v
+FeedbackSent
+Toast
+介⾯
+
+ 
+ 
+ 
+
+===== PAGE 54 =====
+說明
+
+•
+点击
+Feedback
+•
+默认打开键
+盘，进⼊编辑
+状态，
+Bottom
+Sheet向上推
+•
+⾃动带⼊会员
+信箱，但仍可
+编辑
+•
+有输⼊按钮才
+变可按状态
+
+•
+随着输⼊，
+TextArea⾼
+度撑⾼，直到
+max-height
+210，会出现
+scrollbar
+•
+按下Send
+Feedback
+键，返回设定
+主画⾯，有成
+功Toast，3秒
+后消失
+4.5.5底部链接与⽀持
+⼊⼝ 功能
+PrivacyPolicy 弹出隐私政策WebView
+TermsofUse 弹出⽤⼾协议WebView
+4.6个⼈资料⻚（Profile）
+路由:从个⼈中⼼⻚跳转（⼦⻚⾯，⾮独⽴路由）
+功能定位:编辑和管理⽤⼾个⼈信息，数据本地持久化存储。
+
+===== PAGE 55 =====
+⻚⾯各状态
+ ⼀般會員有頭貼 ⼀般會員無頭貼 FoundingM em ber有
+頭貼
+FoundingM em ber無
+頭貼
+介⾯
+說明
+• 框线：绿⾊
+•
+默认头贴：闪电
+•
+框线：⻩⾊
+•
+默认头贴：钻⽯
+
+===== PAGE 56 =====
+
+• 头贴底下会有会员标签，格式同Setting⻚：
+FoundingM ember#42
+4.6.1危险操作（Signout登出、DeleteAccount删除帐⼾）
+将较危险操作藏在右上⻆...⾥，以免⽤⼾误按，并且都有⼆次确认视窗
+4.6.1.1SignOut登出流程
+ D_2.1_M anageM y
+Account/Profile-v点击右上
+⻆Toolbar，打开选单
+D_2.2_SIgnout A_2.1_Signup&Login-v
+Default
+介⾯
+
+ 
+ 
+說明
+
+•
+点击右上⻆...后，打开选
+单，点选SignOut
+
+•
+出现⼆次确认视窗
+•
+标题：Signout?
+•
+副标：You’llneedto
+signinagaintoaccess
+youraccount.
+•
+按钮：Cancel/SignOut
+•
+点击SignOut即登出，到
+登⼊⻚
+
+===== PAGE 57 =====
+4.6.1.2DeleteAccount删除帐⼾流程
+ D_2.1_M anageM y
+Account/Profile-v点击右上
+⻆Toolbar，打开选单
+D_2.3_DeleteAccout
+
+A_2.1_Signup&Login-v
+Default
+介⾯
+
+說明
+
+•
+点击右上⻆...后，打开选
+单，点选DeleteAccount
+（危险，红⾊字）
+•
+出现⼆次确认视窗
+•
+标题：Deleteaccount?
+•
+副标：Thiswill
+permanentlydeleteyour
+accountandsaveddata.
+Thisactioncan’tbe
+undone.
+•
+按钮：Cancel/Delete（危
+险，红⾊按钮）
+•
+点击Delete即删除帐⼾，
+到登⼊⻚
+4.6.2头像管理
+•
+点击头像区域触发⽂件选择器（<input type="file" accept="image/*"> ）
+•
+使⽤ FileReader将图⽚转为Base64DataURL
+
+===== PAGE 58 =====
+•
+存储⾄IndexedDB SierroDB
+ D_2.1_M anageM y
+Account/Profile-vDefault
+⼿機相簿 D_2.1_M anageM y
+Account/Profile-v更新头贴
+Toast
+介⾯
+ 
+說明
+
+•
+点击头贴右下⻆铅笔图标
+• 开启相簿，若没权限需询问
+权限
+
+•
+选择后更新头贴，并有成功
+Toast，3秒后消失
+4.6.3编辑姓名
+ D_2.1_M anageM y
+Account/Profile-v
+Default
+D_2.5_Nam e-v
+Default
+D_2.5_Nam e-v修改
+後
+
+D_2.1_M anageM y
+Account/Profile-v成
+功Toast
+介⾯
+
+===== PAGE 59 =====
+說明
+
+•
+点击Name
+
+•
+预设渐⼊编辑模
+式，键盘打开
+
+•
+有编辑右上⻆save
+钮才会亮起
+
+•
+储存后返回Profile
+⻚⾯，有成功
+Toast，3秒后消失
+•
+姓名太⻓以...显
+⽰，不换⾏
+字段编辑交互
+代码块
+点击字段值  →  进⼊⾏内编辑模式（显⽰输⼊框） 
+→  输⼊新内容 
+→  点击  ✓  保存  →  handleSave() →  更新  state + 持久化⾄  IndexedDB 
+→  点击  ✗  取消  →  handleCancel() →  恢复原值 
+4.6.4编辑连结信箱
+更改信箱需再次OTP验证，流程与4.7.1EmailOTP流程类似
+编辑连结信箱流程
+ D_2.1_M a
+nageM y
+Account/P
+rofile-v
+Default
+D_2.6_Lin
+kedEm ail-
+vDefault
+D_2.6_Lin
+kedEm ail-
+v有改動
+
+A_2.1.2_C
+ontinue
+with
+Em ailOPT
+-vDefault
+A_2.1.3_C
+ontinue
+with
+Em ailOPT
+-vDefault
+A_2.1.4_C
+ontinue
+with
+Em ailOPT
+-v輸⼊完
+D_2.1_M a
+nageM y
+Account/P
+rofile-v成
+功Toast
+1
+2
+3
+4
+
+===== PAGE 60 =====
+介⾯
+說明
+
+•
+点击
+Linked
+Email
+•
+预设进
+⼊编辑
+模式，
+键盘打
+开
+
+•
+有编辑
+底下
+Very
+New
+Email
+钮才会
+亮起
+•
+按下
+Very
+New
+Email，
+若失
+败，输
+⼊框变
+为
+error状
+态，按
+钮不可
+按
+•
+若成功
+会进到
+输⼊验
+证码⻚
+⾯，预
+设开启
+数字键
+盘
+•
+为防⽌
+滥⽤
+Resend
+Code，
+倒数完
+60s才
+可以按
+•
+收到信
+件后，
+⽤⼾可
+点选⾃
+动填⼊
+选项
+（若
+有），
+或⼿动
+填⼊
+•
+填⼊
+完，底
+下
+Verify
+New
+Email
+按钮才
+变可按
+•
+若错
+误，会
+显⽰
+error状
+态，按
+钮不可
+按
+•
+储存后
+返回
+Profile
+⻚⾯，
+有成功
+Toast，
+3秒后消
+失
+•
+信箱太
+⻓以...
+显⽰，
+不换⾏
+
+4.6.5連結第三⽅帳戶
+后续仍可连结/取消连结第三⽅帐⼾，流程与4.7.2第三⽅登录流程类似
+ D_2.1_M anageM y
+Account/Profile-vDefault
+第三⽅验证画⾯ D_2.7_LinkedAccount-v
+Success
+
+
+===== PAGE 61 =====
+介⾯
+ 第三⽅验证画⾯
+說明
+
+•
+e.g.点击Google->Link按
+钮
+
+•
+打开第三⽅验证画⾯
+
+•
+若成功，有成功Toast，3
+秒后消失，GoogleList按
+钮变Unlink
+•
+若失败，红⾊Toast，3秒
+后消失
+
+===== PAGE 62 =====
+4.6.6Redeem FounderBadge
+•
+Code会在单独的⼩卡⽚，是独⼀⽆⼆的
+•
+有⽀付订⾦的都给
+ D_2.1_M anageM y
+Account/Profile-v
+Default
+D_2.8.1_Redeem 
+FounderBadge-v
+Default
+D_2.8.2_Redeem 
+FounderBadge-v有
+輸⼊
+D_2.1_M anageM y
+Account/Profile-v
+FoundingM em ber
+介⾯
+說明
+
+•
+点击LinkedEmail
+
+⽰範無頭貼
+
+•
+预设进⼊编辑模
+式，键盘打开
+
+•
+有编辑底下
+ActivateBadge钮
+才会亮起
+•
+若成功会回到
+Profile⻚⾯，有成
+功Toast，4秒后消
+失
+•
+头像更新为⻩框，
+若⽆头贴，妹任图
+标换成钻⽯，底下
+会有会员标签
+（Setting⻚亦会更
+改）
+⽰範無頭貼
+
+
+===== PAGE 63 =====
+•
+按下Activate
+Badge，若失败，
+输⼊框变为error
+状态，按钮不可按
+4.6.7数据存储
+•
+读取：⻚⾯挂载时 useEffect调⽤ getUserProfile()从IndexedDB读取
+•
+写⼊：每次保存调⽤ saveUserProfile()写⼊IndexedDB（含 updatedAt时间戳）
+4.7注册登⼊（Signup&Login）
+为降低⽤⼾注册与登录⻔槛，Sierro采⽤⽆密码认证机制，⽀持以下三种登录⽅式：
+◦
+EmailOTP（主要推荐）
+◦
+Google登录
+◦
+Apple登录
+⽤⼾⽆需创建或记忆密码，仅需通过邮箱验证码或第三⽅账号完成⾝份验证即可登录。
+EmailOTP作为默认推荐⽅式展⽰，Google与Apple登录作为快捷登录选项提供。
+⾸次登录成功后，⽤⼾将进⼊Onboarding流程；已完成Onboarding的⽤⼾将直接进⼊⾸⻚。
+
+===== PAGE 64 =====
+4.7.1Em ailOTP流程
+⽤⼾通过邮箱接收⼀次性验证码（OTP）完成注册或登录。
+若邮箱对应账号不存在，系统将⾃动创建新账号；若账号已存在，则直接登录。
+规则说明
+•
+验证码为6位数字
+•
+⽤⼾可于60秒后重新发送验证码
+•
+已注册⽤⼾验证成功后直接登录
+•
+未注册⽤⼾验证成功后⾃动创建账号
+Em ailOTP流程
+流程结束，顺利注册/登⼊后
+
+===== PAGE 65 =====
+•
+⾸次登录⽤⼾将进⼊4.7.3Onboarding
+•
+⾮⾸次登錄⽤戶直接进⼊⾸⻚
+ A_2.1_Sign
+up&Login-
+vDefault
+A_2.1.1_Con
+tinuewith
+Em ailOPT-v
+Default
+A_2.1.1_Con
+tinuewith
+Em ailOPT-v
+输⼊完
+A_2.1.2_Con
+tinuewith
+Em ailOPT-v
+Default
+A_2.1.3_Con
+tinuewith
+Em ailOPT-v
+收到验证码
+A_2.1.3_Con
+tinuewith
+Em ailOPT-v
+输⼊完
+介⾯
+
+ 
+ 
+ 
+
+
+說明
+
+•
+点击
+Continue
+with
+Email
+
+
+•
+预设进⼊
+打字模
+式，键盘
+打开，按
+钮被推起
+
+•
+有编辑底
+下
+Continue
+钮才会亮
+起
+•
+若email
+有效，会
+到输⼊验
+证码画
+⾯，开启
+的是数字
+键盘
+•
+输⼊匡底
+下有
+Resend
+Code，但
+须倒数60
+秒才可按
+（如
+下），避
+免被过度
+使⽤
+•
+系统应⽀
+援iOS/
+Android
+原⽣验证
+码⾃动填
+⼊功能
+•
+⽤⼾可点
+击⾃动填
+⼊，或⼿
+动填⼊密
+码
+
+•
+输⼊六个
+数字，底
+下按钮才
+便可按
+•
+若错误，
+输⼊匡会
+变error状
+态，有编
+辑会回复
+正常状态
+（如下）
+
+
+===== PAGE 66 =====
+•
+若按
+Continue
+后，
+email⽆
+效，输⼊
+筐变错误
+状态，按
+钮变不可
+按，重新
+输⼊变为
+原本状态
+4.7.2第三⽅登录流程
+⽀持⽅式
+•
+Google登录
+•
+Apple登录
+⽤⼾可通过Google或Apple账号快速完成注册或登录，⽆需额外设置密码。
+第三⽅登录流程（以G oogle為例）
+流程结束，顺利注册/登⼊后
+•
+⾸次登录⽤⼾将进⼊4.7.3Onboarding
+•
+⾮⾸次登錄⽤戶直接进⼊⾸⻚
+ A_2.1_Signup&Login-v
+Default
+第三⽅验证画⾯
+介⾯ 第三⽅验证画⾯
+
+===== PAGE 67 =====
+
+說明
+
+•
+点击ContinuewithGoogle
+
+
+•
+进⼊第三⽅验证画⾯
+•
+若失败，显⽰红⾊Toast（如
+下）
+
+===== PAGE 68 =====
+4.7.3Onboarding
+在⽤⼾⾸次登录后，引导完成个⼈信息设置及⾸次设备添加。
+触发条件
+•
+⽤⼾⾸次登录
+ A_2.2.1_Onboarding_Nam e
+-vDefault
+A_2.2.1_Onboarding_Nam e
+-v有輸⼊
+A_2.2.2_Onboarding_Device
+-vDefault
+介⾯
+
+===== PAGE 69 =====
+
+ 
+ 
+說明
+
+•
+⽤⼾⾸次登录后，⾸先需询
+问名称
+•
+预设进⼊打字状态，键盘打
+开
+
+•
+有数⼊按钮才变可按
+• 引导加⼊第⼀个装置，按
+ConnectDevice会进⼊
+4.2.4添加设备⽅式（2
+种）与流程，
+•
+因是第⼀次打开，要过前
+置流程（权限授权），要求
+打开Bluetooth&Local
+Network。再来就是正常
+AddDeviceFlow，新增成
+功⼀样会跳出打开
+Notification的Alert，并返
+回主⻚⾯。
+
+===== PAGE 70 =====
+•
+若点击右上⻆Skipfor
+now，直接进⼊主画⾯（空
+值）
+5.通⽤组件说明
+全部DesignSystem通⽤组件，包含以下通⽤组件，设计、种类、⽤途及规范可⻅Figma_Design
+System
+•
+基础Foundation:颜⾊、⽂字、Icon图标图库、Border、BorderRadius、DropShadow
+•
+排版Layout:Spacing、Columns,Gutters&M argins
+•
+基础组件CoreComponents:Button按键、FixedButton固定按键、ToggleSwitch、Battery
+Tag电量标签、BatteryCircle电池环形图、SegmentedControls、M embershipTag会员标签
+•
+表单控制FormControl:TextField、TextArea、IconPicker、Selection、OTPInput
+•
+导览Navigation:BottomNavigation底部导览、Toolbar⼯具列，PageHeader⻚⾯标题、Scrim
+•
+回馈Feedback:Banner、Toast、Alert/Dialog
+•
+List&Card:DeviceCard设备卡⽚、List、SwipeableList
+•
+Asset:Sierro装置图库、Logo图库、插画图库
+
+===== PAGE 71 =====
+5.1BatteryRing（电池环形图）
+属性 类型 说明
+percentage number 电量百分⽐（1-100）
+Disconnected或0時顯⽰-
+color string
+
+BatteryLevel（60-100%绿
+⾊；20-59%橘⾊；1-19%红
+⾊）
+size number SVG尺⼨（像素）
+strokeWidth number 圆弧线宽
+•
+使⽤SVG strokeDasharray/ strokeDashoffset实现圆形进度
+•
+⽀持FramerM otion动画过渡
+•
+v1.1新增ARIA标签：aria-label="Battery 78%" （⽆障碍合规）
+依照是否在充电（在充电者顶部会有 ⚡ ）、Connected/Disconnected、BatteryLevel（60-100%
+#01D6BE ；20-59%橘⾊；1-19%红⾊），共有9种状态，详⻅表格。
+ BatteryLevel
+
+放电
+⽂字显⽰~Xhrsremaining，
+100%时不显⽰⽂字
+
+充电
+顶部会有 ⚡ ，通常是⽩⾊，
+100%时会变#01D6BE
+⽂字显⽰ ~X hrs to full ，
+100%时不显⽰⽂字
+Connected 100%
+#01D6BE
+60-99%
+#01D6BE
+
+===== PAGE 72 =====
+20-59%
+橘⾊
+1-19%
+紅⾊
+
+Disconnected 無
+
+
+電量處顯⽰-
+⽂字处显⽰Disconnected
+5.2Bottom Navigation（底部导航栏）
+
+===== PAGE 73 =====
+•
+使⽤ NavLink （ReactRouterDOM ）实现路由导航
+•
+激活Tab显⽰⻘绿⾊半透明背景+底部圆点指⽰器
+•
+过渡动画250msease-out
+•
+v1.1要求可点击热区≥48×48dp（WCAG触控标准）
+•
+v1.1要求焦点可⻅状态：focus-visible:ring-2 ring-[#01D6BE]
+•
+详细规格⻅Figma_DesignSystem_BottomNavigation
+5.3ToggleSwitch（切换开关）
+•
+通⽤开关组件，props: checked 、onChange
+•
+视觉⻛格：iOS⻛格滑动开关，尺⼨≥52×32dp（M aterial3标准）
+•
+激活⾊：#01D6BE
+•
+详细规格⻅Figma_DesignSystem_ToggleSwitch
+
+===== PAGE 74 =====
+5.4Toast通知组件（v1.1新增）
+•
+替代浏览器原⽣弹窗，提供更好的原⽣感体验
+•
+⽀持类型：positive（主⾊）/negative（红⾊）/notice（橘⾊）/neutral（灰⾊）
+•
+⾃动消失：3s后淡出
+•
+详细规格⻅Figma_DesignSystem_Toast
+
+
+===== PAGE 75 =====
+5.5Skeleton⻣架屏（v1.1新增）
+•
+⻚⾯加载时显⽰ShimmerSkeleton占位符
+•
+适⽤于设备列表、统计卡⽚等异步数据区域
+•
+其余画⾯加载时，可显⽰Spinner即可
+ A_1.1.1_Hom epage-v加載
+中
+B_1.1_DeviceDetailPage-
+v加載中
+C_1.1_InsightsM ainPage-
+v加載中
+介⾯
+
+6.数据模型&状态管理
+6.1ZustandStore结构
+PowerStationStore（主数据Store）
+
+===== PAGE 76 =====
+代码块interface PowerStationState { 
+  powerStation: PowerStation               // 电站核⼼数据 
+  devices: Device[]                        // 设备列表 
+  settings: AppSettings                    // 应⽤设置 
+  selectedDeviceId: string | null          // 当前选中设备 
+  peakShavingSettings: PeakShavingSettings // 峰⾕参数配置 
+  peakShavingStatus: PeakShavingStatus     // 峰⾕运⾏状态 
+} 
+持久化:localStorage，key= Sierro-storage
+ConnectionStore（连接状态Store）
+管理BLE和Serial连接状态：ConnectionInfo类型，包含 status
+（connected/disconnected/connecting）等字段。
+新增Store规划（v1.2）
+Store 说明
+deviceStore 设备列表、分组、排序、批量
+操作
+scheduleStore ⽇程列表、冲突检测、TOU
+费率
+settingsStore 偏好设置、区域单位、外观
+statsStore 统计数据、能源评分
+notificationStore 通知列表、未读状态
+6.2PowerStation核⼼数据字段
+1
+2
+3
+4
+5
+6
+7
+8
+
+===== PAGE 77 =====
+字段 类型 说明
+batteryLevel number 电量百分⽐
+batteryHealth number 电池健康度（%）
+temperature number 温度（°C，展⽰时按⽤⼾设置
+换算°F）
+cycleCount number 充放电循环次数
+inputPower number 输⼊功率（W ）
+outputPower number 输出功率（W ）
+capacity number 电池容量（Wh）
+dataSource string 新增： "BLE Direct"/
+"Modbus RTU"/ "Demo"
+lastSyncAt Date 新增：最后同步时间戳
+6.3预置设备（默认数据）
+设备 类型 功率 容量
+CPAP（呼吸机） cpap 45W 500Wh
+Fridge（冰箱） fridge 120W 1200Wh
+Sierro1000（主机） powerstation 0W 1000Wh
+6.4IndexedDB（SierroDB）
+存储对象 ⽤途
+功率流历史数据 记录实时功率曲线历史（含采
+集时间戳）
+
+===== PAGE 78 =====
+⽤⼾资料（UserProfile） 存储姓名、邮箱、头像、加⼊
+时间
+数据回收站（RecycleBin） 新增：存储30天内已删除的
+历史数据
+7.通信协议
+7.1BLE蓝⽛协议（bleM anager.ts）
+功能 说明
+设备扫描 调⽤WebBluetoothAPI
+navigator.bluetooth.re
+questDevice()
+连接管理 getBleManager()/
+destroyBleManager()
+数据包 BlePowerPacket类型，
+包含实时功率数据
+连接失败降级 v1.1新增：连接失败时显⽰
+Toast错误提⽰，提供重试/
+⼿动输⼊选项
+7.2串⼝M odbus协议（serialM odbus.ts）
+功能 说明
+串⼝连接 调⽤WebSerialAPI
+
+===== PAGE 79 =====
+协议格式 M odbusRTU协议
+数据读取 定时轮询寄存器数据
+7.3数据来源标识规范（v1.1新增）
+所有实时数据展⽰，必须在UI中标注数据来源：
+来源 标识 视觉
+BLE真实数据 BLE Direct 绿⾊圆点
+M odbus真实数据 Modbus RTU 蓝⾊圆点
+模拟数据 DEMO MODE 顶部⻩⾊横幅+数据虚线样式
+历史数据 Last sync: X min ago 灰⾊时间戳
+8.数据信任体系
+储能产品的⽣命线。北美⽤⼾对数据透明度的容忍度远低于国内⽤⼾。
+8.1信任断裂点识别
+代码块
+⽤⼾⼼理路径： 
+" 这个  App 显⽰我的电池还有  78%" 
+→  " 这是真的还是模拟的？ " （ ❓  信任第⼀道裂痕） 
+→  " 节省了  $2.1 ，怎么算的？ " （ ❓  透明度不⾜） 
+→  "CO ₂  减排  6.4kg ，谁认证的？ " （ ❓  数据不可信） 
+1
+2
+3
+4
+5
+
+===== PAGE 80 =====
+→  " 换⼿机数据全没了 " （ ❌  可靠性崩塌） 
+8.2Level1：数据来源透明化
+元素 当前（v1.0） ⽬标（v1.1）
+电量数据 ⽆来源标识 标注 BLE Direct/ Modbus RTU/ Demo
+功率曲线 ⽆采样率说明 底部标注 Updated every 1s
+模拟模式 ⽆区分 顶部⻩⾊横幅 DEMO MODE+全局虚线处理
+历史数据 ⽆时间戳 每条记录显⽰ Last sync: 2 min ago
+8.3Level2：计算逻辑可审计
+在节省⾦额和CO ₂ 数据旁增加 ℹ图标，点击展开计算公式：
+代码块
+💰  Cost Saved: $2.10 
+ 
+How we calculated this: 
+  Solar charged:    12.8 kWh × $0.00/kWh (free)       = $0.00 
+  Grid equivalent:  12.8 kWh × $0.16/kWh              = $2.05 
+  Round-trip eff:   × 95% 
+  Net saved:        $2.05 × 0.95 × (peak - off-peak)  = $2.10 
+ 
+Data source: Your local TOU rate (PG&E E-TOU-C) 
+8.4Level3：数据主权保障
+6
+1
+2
+3
+4
+5
+6
+7
+8
+9
+
+===== PAGE 81 =====
+措施 说明
+本地优先 所有数据默认存储在设备端，
+云同步可选（v2.5）
+导出⾃由 ⼀键导出全部数据
+（JSON/CSV），不锁定⽤⼾
+删除确认 任何数据删除操作需⼆次确
+认+30天回收站
+隐私声明 ⾸次使⽤弹出简明隐私声明
+（3条要点，⾮法律⻓⽂）
+9.⽆障碍与合规（ADA/W CAG ）
+法律背景：美国ADA（AmericanswithDisabilitiesAct）要求数字产品满⾜WCAG2.1AA标准。
+2023年此类诉讼超4,000起，北美市场准⼊的法律⻔槛。
+9.1WCAG 合规清单
+检查项 v1.0状态 WCAG要求 v1.1修复⽅案
+颜⾊对⽐度 #8E8E93on
+#1C1C1E=4.1:1
+AA≥4.5:1 副⽂字改为 #A0A0A5
+（对⽐度5.2:1）
+焦点指⽰器 ⽆可⻅焦点 必须有2px+焦点环 添加 focus-
+visible:ring-2 
+ring-[#01D6BE]
+屏幕阅读器 ⽆ARIA标签 所有交互元素需aria-
+label
+BatteryRing添加 aria-
+label="Battery 78%"
+触控⽬标 Tab可能<44pt 最低44×44pt（Apple
+HIG ）
+确保每个Tab热区≥
+48×48dp
+
+===== PAGE 82 =====
+动效减弱 ⽆ prefers-reduced-
+motion
+必须尊重系统设置 @media (prefers-
+reduced-motion: 
+reduce)
+⾊盲友好 状态仅靠颜⾊区分 不能仅靠颜⾊传达信息 添加图标标签（ ⚡ 充电/
+🔋 放电）
+触控间距 Tab间距不明 最⼩8dp间距 Tab间距确保≥8dp
+9.2触控热区规范
+位置 问题 规范 修复
+底部Tab图标 热区可能<44pt AppleHIG最低44×44pt 每个Tab可点击区域≥
+48×48dp
+设备卡⽚开关 Toggle过⼩ M aterial3规范
+52×32dp
+增⼤Toggle尺⼨
+通知列表项 ⽆左滑⼿势 iOS⽤⼾习惯 增加左滑操作
+搜索栏 输⼊框⾼度偏矮 北美⽤⼾⼿指更⼤ 最⼩⾼度48dp
+10.⾮功能性需求
+10.1性能
+指标 要求
+⾸屏加载 <3s（PWA缓存后<1s）
+实时数据刷新 1s间隔
+（useRealtimeSimulato
+
+===== PAGE 83 =====
+r ）
+动画帧率 60fps（FramerM otion，按
+需引⼊控制包体积）
+FramerM otion包体积 ≤28KBgzip，使⽤
+AnimatePresence按需加
+载
+10.2离线能⼒（PW A）
+•
+ServiceWorker缓存核⼼资源
+•
+离线可查看上次同步的数据
+•
+⽀持"添加⾄主屏幕"安装
+
+10.3兼容性
+平台 要求
+移动端 iOSSafari16+、Android
+Chrome110+
+桌⾯浏览器 Chrome110+（BLE/Serial
+API⽀持）
+BLE功能 仅Chrome/Edge⽀持（需
+HTTPS）
+Serial功能 仅Chrome/Edge⽀持（需
+HTTPS）
+10.4安全
+•
+数据全部本地存储，⽆服务端
+
+===== PAGE 84 =====
+•
+⽤⼾资料存储于设备本地IndexedDB
+•
+HTTPS部署（GitHubPages默认⽀持）
+
+10.5北美本地化要求（v1.1新增）
+维度 要求 优先级
+温度单位 °F作为北美默认值 P0
+时间格式 12h制（AM /PM ）作为北美
+默认值
+P0
+货币 USD（$），从¥迁移 P0
+  
+英语界⾯ 所有⽂案英语优先，⽀持
+i18n扩展
+P0
+11.设计规范
+11.1颜⾊体系
+•
+详细规格⻅Figma_DesignSystem_ColorScheme
+⽤途 ⾊值 说明
+主题⾊/品牌⾊/成功/充电⾊ #01D6BE ⻘绿⾊，主交互元素
+警告/错误⾊ #FF3B30 红⾊警报
+警告/放电⾊ #FF9500 橙⾊
+市电⾊ #01D6BE ⻘⾊
+
+===== PAGE 85 =====
+电池特殊⾊ #FFD700 ⾦⾊（FounderBadge）
+主背景⾊ #141414 深灰⿊⾊背景
+卡⽚背景⾊ #262626 深⾊卡⽚背景
+焦点环⾊ #01D6BE v1.1新增，键盘/辅助技术焦
+点标识
+11.2圆⻆规范
+•
+详细规格⻅Figma_DesignSystem_BorderRadius
+元素 圆⻆Size
+⼤型卡⽚ l
+标准卡⽚ m,l
+⼩卡⽚/标签 l,xl
+按钮 m
+搜索栏 28px
+11.3主题⻛格
+
+===== PAGE 86 =====
+•
+深⾊模式优先（Dark-firstdesign），后续会新增浅⾊模式供换
+•
+仿iOS系统原⽣⻛格
+•
+圆⻆卡⽚式布局
+•
+主⾊⻘绿⾊搭配深⾊背景，具备科技感
+
+11.4动效规范（v1.1补充）
+反馈类型 触发场景 实现⽅案
+微动效 Toggle切换、按钮点击 弹性缩放（scale:0.95→1）
+状态变更 充电→放电模式切换 环形图颜⾊平滑过渡（1s
+ease-in-out）
+数字滚动 功率数值变化 CountUp动画，30ms/步
+空状态 ⽆设备时 脉冲动画引导"Add
+Device"按钮
+成功反馈 添加设备/保存设置 Lottie打勾动画
+错误反馈 BLE连接失败 卡⽚抖动+红⾊滑⼊Toast
+⻣架屏 ⻚⾯加载中 ShimmerSkeleton占位
+12.增⻓引擎设计
+12.1获客漏⽃
+代码块
+认知层（ Awareness ） 
+├──  Product Hunt ⾸发（北美科技圈精准⽤⼾） 
+├──  Reddit r/solar / r/preppers 社区种草 
+├──  YouTube ⼾外电源评测合作（配  App 演⽰） 
+1
+2
+3
+4
+
+===== PAGE 87 =====
+└──  SEO ： solar generator app / portable power station monitoring 
+ 
+激活层（ Activation ） 
+├──  Web App 零安装体验（ PWA 即开即⽤） 
+├──  Demo Mode 体验完整功能（⽆需真实设备） 
+└──  3 步  Onboarding 快速上⼿ 
+ 
+留存层（ Retention ） 
+├──  每⽇能源评分推送 
+├──  周 / ⽉洞察报告 
+├──  节省⾦额累计展⽰ 
+└──  社区节能排⾏榜 
+ 
+推荐层（ Referral ） 
+├──  分享节省⾦额到  Twitter/Instagram 
+└──  开源贡献者  Founder Badge 
+12.2差异化定位
+差异化⽅向 具体策略 预期效果
+🔓 开放⽣态 RESTAPI+HomeAssistant
+/SmartThings集成（v2.5）
+吸引技术⽤⼾，⼝碑裂变
+  
+🌱 绿⾊叙事 CO ₂ 减排可视化+社交分享
++碳积分体系
+吸引北美环保意识强的千禧⼀
+代
+12.3北极星指标
+指标 定义 ⽬标值（上线6个⽉）
+W AU 周活跃⽤⼾ 10,000
+设备连接率 添加真实设备的⽤⼾⽐例 >40%
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+
+===== PAGE 88 =====
+⽇程启⽤率 开启SmartSchedule的⽤
+⼾⽐例
+>25%
+Day-7留存 注册后7天仍活跃 >35%
+NPS 净推荐值 >50
+  
+13.版本规划
+13.1优先级矩阵
+代码块
+                    ⽤⼾价值 
+                     ⾼ 
+                      │ 
+   ★北美本地化 ($)   ★剩余时⻓     ★ Smart Schedule 重构 
+   ★ Onboarding      ★ Demo 模式    ★ BLE 错误降级 
+   ★数据来源透明                      ★时间轴视图 
+                      │ 
+              ────────┼────────────── 
+                      │ 
+   ⻓按多选           │          账号云同步 
+   下拉刷新           │          数据导出 CSV 
+   焦点 /ARIA         │          AI 洞察卡⽚ 
+   动效增强           │          TOU 费率匹配 
+                      │ 
+                     低 
+                      └────────────────────→  开发成本 
+                      低         中          ⾼ 
+13.2版本路线图
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+
+===== PAGE 89 =====
+版本 主题 核⼼交付 周期 关键指标
+v1.1 信任修复 DEM OM ODE标识
++数据来源标签+
+FactoryReset⼆次
+确认+⽇程冲突检
+测+WCAG合规基
+础修复
+2周 Day-1留存>50%
+v1.2 北美就绪 $/°F/12h本地化+
+剩余时⻓+BLE降
+级Toast+导航重
+构+i18n框架+架
+构拆分
+4周 北美⽤⼾占⽐>
+30%
+v1.5 体验打磨 ⼿势交互（下拉刷
+新/左滑/⻓按）+
+动效体系+⽆障碍
+全量合规+空状态
+优化+Skeleton
+3周 NPS>40
+v2.0 价值升级 SmartSchedule重
+构+24h时间轴+
+TOU⾃动匹配+
+Insights重构+能
+源评分+AI洞察
+8周 ⽇程启⽤率>25%
+    
+14.版本与部署
+14.1版本⽂件
+•
+src/version.json ：记录当前应⽤版本号
+
+
+===== PAGE 90 =====
+14.2部署⽅式
+•
+托管平台:GitHubPages
+•
+访问地址:https://lujian1324-spec.github.io/energy-app/
+•
+CI/CD:GitHubActions（.github/workflows/deploy.yml ）
+•
+构建命令: vite build
+
+14.3PW A资源
+⽂件 说明
+public/icon-
+192x192.svg
+PWA⼩图标
+public/icon-
+512x512.svg
+PWA⼤图标
+public/sw.js ServiceWorker

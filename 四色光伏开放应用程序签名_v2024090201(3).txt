@@ -1,0 +1,251 @@
+
+
+--- page 1 ---
+四色光伏开放应用程序签名
+1.  更新历史
+版本 说明
+v2024090201 初始版本
+2.  概述
+为有效管控第三方应用合理使用本平台接口，特增加应用程序签名校验拦截。未通过拦截将无法访问本平台接口。
+3.  接口拦截范围
+结合平台现状，目前仅针对用户登录、用户注册相关接口进行拦截：
+接口 名称 说明
+/login/** 用户登录服务 该服务下除/login/logout外 均拦截
+/app/scan/qrcode/login 二维码登录确认
+/user/register/cellphone 手机注册账户
+/user/register/email 邮箱注册账户
+/user/create/account 创建下级用户账号
+/user/send/sms/captcha 发送手机验证码
+/user/send/email/captcha发送邮箱验证码
+/user/reset/password 找回密码
+/deviceManufacturer/add创建厂家
+4.  签名算法
+4.1  前置条件
+第三方应用需在本平台申请 AppID 和 AppSecret ，妥善保管、合理使用。如因私自对外泄露 AppID 、 AppSecret 等信息导致数据丢失或服务终止等情况责任自
+负。
+4.2  签名步骤
+4.2.1  公共参数
+参数 名称 说明
+IOT-Open-AppID AppID 本平台申请的AppID
+IOT-Open-Nonce 随机数 长度为32的随机字符串，随机性越大越好，每个请求都需要重新生成。15分钟内不允许重复。
+IOT-Open-Body-HashHttp Body 哈希值
+对于GET请求，该值为空字符串；非GET类请求（如POST，Content-Type:application/json;charset=UTF-8），该值计算方法为sha256(httpBody).toLowerHexText()
+4.2.2 URL 参数
+（ 1 ）忽略   与  4.2.1  公共参数   中同名的参数；
+（ 2 ）参数值必须为原始值，即不做任何处理，如 URL 编码等
+4.2.3  合并参数并排序
+合并  4.2.1  公共参数   与  4.2.2 URL 参数，并按照参数名排序。
+4.2.4  拼接合并后的参数
+将排序后的参数键值对用 & 拼接，即拼接成 key1=val1&key2=val2&...
+4.2.5  对拼接后的字符串进行 Base64
+
+
+--- page 2 ---
+字符集为 Utf8
+4.2.6  对 Base64 后的字符串计算 Hash
+Hash 算法为 HMAC­SHA256 ， Hash Key 为   本平台申请的  AppSecret  。
+4.2.7  对 Hash 后的原始数据进行 md5 ，即为签名值
+5.  使用签名
+对于需要签名的接口，在 Htpp Header 中增加如下参数
+参数 名称 说明
+IOT-Open-AppID AppID 与参与计算签名的AppID值一致
+IOT-Open-Nonce 随机数 与参与计算签名的Nonce值一致
+IOT-Open-Sign签名 4.2.6 计算后的签名值
+6.  示例
+6.1  示例数据
+名称 示例值
+AppID IamAppID
+AppSecret IamAppSecret
+随机数 12345678901234567890123456789012
+6.1  示例请求
+POST /login/test/sign?hello=world&address=china&solar=super&EmptyText=&monkey= 黑悟空
+{"Jackie":"Chan","Andy":"Lau","Jay":"Chou"} 
+6.2  签名步骤
+（ 1 ）解析 URL 参数
+{ 
+    "hello": "world", 
+    "address": "china", 
+    "solar": "super", 
+    "EmptyText": "", 
+    "monkey": "黑悟空"  
+} 
+（ 2 ）计算 Http Body  哈希值 (SHA256)
+992fffa7ee7f171121d08a1806d6465a52ed77814dd9eda975df290d55bbbe74 
+（ 3 ）合并 URL 参数 + 公共参数
+{ 
+    "hello": "world", 
+    "address": "china", 
+    "solar": "super", 
+    "EmptyText": "", 
+    "monkey": "黑悟空", 
+    "IOT-Open-AppID": "IamAppID", 
+    "IOT-Open-Nonce": "12345678901234567890123456789012", 
+    "IOT-Open-Body-Hash": "992fffa7ee7f171121d08a1806d6465a52ed77814dd9eda975df290d55bbbe74"  
+} 
+（ 4 ）排序参数
+{ 
+    "EmptyText": "", 
+    "IOT-Open-AppID": "IamAppID", 
+    "IOT-Open-Body-Hash": "992fffa7ee7f171121d08a1806d6465a52ed77814dd9eda975df290d55bbbe74", 
+
+
+--- page 3 ---
+    "IOT-Open-Nonce": "12345678901234567890123456789012", 
+    "address": "china", 
+    "hello": "world", 
+    "monkey": "黑悟空", 
+    "solar": "super"  
+} 
+（ 5 ）拼接字符串
+EmptyText=&IOT-Open-AppID=IamAppID&IOT-Open-Body-
+Hash=992fffa7ee7f171121d08a1806d6465a52ed77814dd9eda975df290d55bbbe74&IOT-Open-
+Nonce=12345678901234567890123456789012&address=china&hello=world&monkey=黑悟空&solar=super 
+（ 6 ） Base64 步骤（ 3 ）拼接后的字符串
+RW1wdHlUZXh0PSZJT1QtT3Blbi1BcHBJRD1JYW1BcHBJRCZJT1QtT3Blbi1Cb2R5LUhhc2g9OTkyZmZmYTdlZTdmMTcxMTIxZDA4YTE4MDZkNjQ2NWE1MmVkNzc4MTRkZDllZGE5NzVkZjI5MGQ1NWJiYmU3NCZJT1QtT3Blbi1Ob25jZT0xMjM0NTY3ODkwMTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMiZhZGRyZXNzPWNoaW5hJmhlbGxvPXdvcmxkJm1vbmtleT3pu5Hmgp/nqbomc29sYXI9c3VwZXI=
+（ 7 ）计算 Base64 字符串的哈希值（ HmacSHA256 ）
+C8 4E D6 0A 18 E4 BA 23 11 1E B9 8F 8C 65 36 23 CE AD DA 39 33 BF DE 98 03 4A 46 1D 07 19 56 4C 
+（ 8 ） md5 Hash 值
+a7da3c4152b2de366659d109450955ea 
+6.3.  使用签名
+在 Htpp Header 中增加如下参数
+参数 名称 值
+IOT-Open-AppID AppID IamAppID
+IOT-Open-Nonce 随机数 12345678901234567890123456789012
+IOT-Open-Sign 签名 a7da3c4152b2de366659d109450955ea
+7.  参考代码
+7.1 Java 代码
+p a c k a g e c o m . h i f l y i n g . s o l a r . m a n a g e r; 
+i m p o r t j a v a . u t i l . C o l l e c t i o n s; 
+i m p o r t j a v a . u t i l . L i n k e d L i s t; 
+i m p o r t j a v a . u t i l . L i s t; 
+i m p o r t c n . h u t o o l . c o r e . c o d e c . B a s e 6 4; 
+i m p o r t c n . h u t o o l . c o r e . c o l l e c t i o n . C o l l e c t i o n U t i l; 
+i m p o r t c n . h u t o o l . c o r e . u t i l . C h a r s e t U t i l; 
+i m p o r t c n . h u t o o l . c o r e . u t i l . H e x U t i l; 
+i m p o r t c n . h u t o o l . c o r e . u t i l . S t r U t i l; 
+i m p o r t c n . h u t o o l . c r y p t o . d i g e s t . D i g e s t U t i l; 
+i m p o r t c n . h u t o o l . c r y p t o . d i g e s t . H M a c; 
+i m p o r t c n . h u t o o l . c r y p t o . d i g e s t . H m a c A l g o r i t h m; 
+i m p o r t l o m b o k . A l l A r g s C o n s t r u c t o r; 
+i m p o r t l o m b o k . D a t a; 
+/** 
+ * @author Zhang GuoYin 
+ * @date 2024-09-02 16:46:22 
+ */ 
+p u b l i c c l a s s A p p S i g n D e m o { 
+    @Data 
+    @AllArgsConstructor 
+    p r i v a t e s t a t i c c l a s s H t t p P a r a m e t e r i m p l e m e n t s C o m p a r a b l e<HttpParameter> { 
+        p r i v a t e S t r i n g key; 
+
+
+--- page 4 ---
+        p r i v a t e S t r i n g value; 
+        @Override 
+        p u b l i c S t r i n g toString() { 
+            r e t u r n S t r i n g.format("%s=%s", key, value); 
+        } 
+        @Override 
+        p u b l i c i n t compareTo(HttpParameter target) { 
+            S t r i n g targetKey = target == null ? null : target.getKey(); 
+            r e t u r n StrUtil.compare(key, targetKey, false); 
+        } 
+    } 
+    p u b l i c s t a t i c v o i d main(S t r i n g [ ] args) { 
+        S t r i n g appID = "IamAppID"; 
+        S t r i n g appSecret = "IamAppSecret"; 
+        S t r i n g nonce = "12345678901234567890123456789012"; 
+        S t r i n g httpBodyText = "{\"Jackie\":\"Chan\",\"Andy\":\"Lau\",\"Jay\":\"Chou\"}"; 
+        S t r i n g httpBodyHash = DigestUtil.sha256Hex(httpBodyText).toLowerCase(); 
+        S y s t e m.out.println("httpBodyHash: ".concat(httpBodyHash)); 
+        L i s t<HttpParameter> httpParameters = n e w L i n k e d L i s t<>(); 
+        httpParameters.add(n e w HttpParameter("hello", "world")); 
+        httpParameters.add(n e w HttpParameter("address", "china")); 
+        httpParameters.add(n e w HttpParameter("solar", "super")); 
+        httpParameters.add(n e w HttpParameter("EmptyText", "")); 
+        httpParameters.add(n e w HttpParameter("monkey", "黑悟空")); 
+        httpParameters.add(n e w HttpParameter("IOT-Open-AppID", appID)); 
+        httpParameters.add(n e w HttpParameter("IOT-Open-Nonce", nonce)); 
+        httpParameters.add(n e w HttpParameter("IOT-Open-Body-Hash", httpBodyHash)); 
+        C o l l e c t i o n s.sort(httpParameters); 
+        S t r i n g orderedText = CollectionUtil.join(httpParameters, "&"); 
+        S y s t e m.out.println("orderedText: ".concat(orderedText)); 
+        S t r i n g base64 = Base64.encode(orderedText); 
+        S y s t e m.out.println("base64: ".concat(base64)); 
+        HMac hmac = DigestUtil.hmac(HmacAlgorithm.HmacSHA256, appSecret.getBytes(CharsetUtil.CHARSET_UTF_8)); 
+        b y t e [ ] hmacedBytes = hmac.digest(base64); 
+        S y s t e m.out.println("hash: ".concat(HexUtil.format(HexUtil.encodeHexStr(hmacedBytes)).toUpperCase())); 
+        S t r i n g sign = DigestUtil.md5Hex(hmacedBytes); 
+        S y s t e m.out.println("sign: ".concat(sign)); 
+    } 
+} 
+【输出】 
+httpBodyHash: 992fffa7ee7f171121d08a1806d6465a52ed77814dd9eda975df290d55bbbe74 
+orderedText: EmptyText=&IOT-Open-AppID=IamAppID&IOT-Open-Body-
+Hash=992fffa7ee7f171121d08a1806d6465a52ed77814dd9eda975df290d55bbbe74&IOT-Open-
+Nonce=12345678901234567890123456789012&address=china&hello=world&monkey=黑悟空&solar=super 
+base64: 
+RW1wdHlUZXh0PSZJT1QtT3Blbi1BcHBJRD1JYW1BcHBJRCZJT1QtT3Blbi1Cb2R5LUhhc2g9OTkyZmZmYTdlZTdmMTcxMTIxZDA4YTE4MDZkNjQ2NWE1MmVkNzc4MTRkZDllZGE5NzVkZjI5MGQ1NWJiYmU3NCZJT1QtT3Blbi1Ob25jZT0xMjM0NTY3ODkwMTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMiZhZGRyZXNzPWNoaW5hJmhlbGxvPXdvcmxkJm1vbmtleT3pu5Hmgp/nqbomc29sYXI9c3VwZXI=
+hash: C8 4E D6 0A 18 E4 BA 23 11 1E B9 8F 8C 65 36 23 CE AD DA 39 33 BF DE 98 03 4A 46 1D 07 19 56 4C 
+sign: a7da3c4152b2de366659d109450955ea 
+
+
+--- page 5 ---
+7.2 JavaScript 代码
+const collect = require('collect.js'); 
+const Base64 = require('crypto-js/enc-base64'); 
+const Utf8 = require('crypto-js/enc-utf8'); 
+const HmacSHA256 = require('crypto-js/hmac-sha256'); 
+const md5 = require('crypto-js/md5'); 
+const sha256 = require('crypto-js/sha256'); 
+const qs = require('qs'); 
+const APP_ID = 'IamAppID'; 
+const APP_SECRET = 'IamAppSecret'; 
+const NONCE = '12345678901234567890123456789012'; 
+const urlParameters = { 
+  'hello': 'world', 
+  'address': 'china', 
+  'solar': 'super', 
+  'EmptyText': '', 
+  'monkey': '黑悟空', 
+}; 
+const httpBodyText = '{"Jackie":"Chan","Andy":"Lau","Jay":"Chou"}'; 
+const httpBodyWordArray = Utf8.parse(httpBodyText); 
+const httpBodyHash = sha256(httpBodyWordArray).toString().toLowerCase(); 
+console.log('httpBodyHash:', httpBodyHash); 
+const signParameters = { 
+  ...urlParameters,
+  'IOT-Open-AppID': APP_ID, 
+  'IOT-Open-Nonce': NONCE, 
+  'IOT-Open-Body-Hash': httpBodyHash, 
+}; 
+const calculateSign = (willSignParameters = {}, appSecret = '') => { 
+  const parameters = collect(willSignParameters).sortKeys().all(); 
+  console.log('orderedParameters:', JSON.stringify(parameters)); 
+  const toBase64Text = qs.stringify(parameters, { encode: false }); 
+  console.log('orderedText:', toBase64Text); 
+  const toBase64WordArray = Utf8.parse(toBase64Text); 
+  const base64 = Base64.stringify(toBase64WordArray); 
+  console.log('base64:', base64); 
+  const hmacSha1WordArray = HmacSHA256(base64, appSecret); 
+  console.log('hash:', hmacSha1WordArray.toString()); 
+  const sign = md5(hmacSha1WordArray).toString().toLowerCase(); 
+  console.log('sign:', sign); 
+  r e t u r n sign; 
+}; 
+calculateSign(signParameters, APP_SECRET); 
+【输出】 
+httpBodyHash: 992fffa7ee7f171121d08a1806d6465a52ed77814dd9eda975df290d55bbbe74 
+orderedParameters: {"EmptyText":"","IOT-Open-AppID":"IamAppID","IOT-Open-Body-
+Hash":"992fffa7ee7f171121d08a1806d6465a52ed77814dd9eda975df290d55bbbe74","IOT-Open-
+
+
+--- page 6 ---
+Nonce":"12345678901234567890123456789012","address":"china","hello":"world","monkey":"黑悟空","solar":"super"} 
+orderedText: EmptyText=&IOT-Open-AppID=IamAppID&IOT-Open-Body-
+Hash=992fffa7ee7f171121d08a1806d6465a52ed77814dd9eda975df290d55bbbe74&IOT-Open-
+Nonce=12345678901234567890123456789012&address=china&hello=world&monkey=黑悟空&solar=super 
+base64: 
+RW1wdHlUZXh0PSZJT1QtT3Blbi1BcHBJRD1JYW1BcHBJRCZJT1QtT3Blbi1Cb2R5LUhhc2g9OTkyZmZmYTdlZTdmMTcxMTIxZDA4YTE4MDZkNjQ2NWE1MmVkNzc4MTRkZDllZGE5NzVkZjI5MGQ1NWJiYmU3NCZJT1QtT3Blbi1Ob25jZT0xMjM0NTY3ODkwMTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMiZhZGRyZXNzPWNoaW5hJmhlbGxvPXdvcmxkJm1vbmtleT3pu5Hmgp/nqbomc29sYXI9c3VwZXI=
+hash: c84ed60a18e4ba23111eb98f8c653623ceadda3933bfde98034a461d0719564c 
+sign: a7da3c4152b2de366659d109450955ea
